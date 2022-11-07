@@ -1,0 +1,13 @@
+(executable
+ (name server)
+ (modules server template game)
+ 
+ (libraries dream core core_unix)
+ (preprocess (pps lwt_ppx)))
+ 
+
+ (rule
+ (targets template.ml)
+ (deps template.eml.ml)
+ (action
+  (run dream_eml %{deps} --workspace %{workspace_root})))
