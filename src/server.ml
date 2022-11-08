@@ -13,14 +13,14 @@ let cpu_board = Array.create ~len:100 0 (* CPU's board, so seen by the user duri
 let handle_user_turn (user_move:string) request = 
 
   cpu_board.(Int.of_string user_move) <- 1; (* Update CPU board with the user move (hit/miss - right now everything is a miss)*)
-  
-  Dream.html (Template.cpu_turn  ~message:(Game.board_to_string user_board) request ) (* Load CPU turn after processing user move *)
+  Dream.log "jello %s" (Game.board_to_string cpu_board);
+  Dream.html (Template.game_board  ~user_board_status:(Game.board_to_string user_board) ~cpu_board_status:(Game.board_to_string cpu_board) ~turn:"cpu" request ) (* Load CPU turn after processing user move *)
 
 let handle_cpu_turn (cpu_move:string) request = 
 
   user_board.(Int.of_string cpu_move) <- 1; (* Update user board with the CPU move *)
   
-  Dream.html (Template.user_turn  ~message:(Game.board_to_string cpu_board) request ) (* Load user turn after processing CPU move *)
+  Dream.html (Template.game_board  ~user_board_status:(Game.board_to_string user_board) ~cpu_board_status:(Game.board_to_string cpu_board) ~turn: "user" request ) (* Load CPU turn after processing user move *)
 
 
 let () =
@@ -31,7 +31,7 @@ let () =
 
     Dream.get  "/"
       (fun request ->
-        Dream.html (Template.user_turn ~message:"" request )); (* Start out with user turn with a blank message/board status*)
+        Dream.html  (Template.game_board  ~user_board_status:(Game.board_to_string user_board) ~cpu_board_status:(Game.board_to_string cpu_board) ~turn: "user" request )); (* Start out with user turn with a blank message/board status*)
 
     Dream.post "/user_turn"
     (fun request ->
