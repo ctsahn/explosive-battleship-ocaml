@@ -1,6 +1,6 @@
 (executable
  (name server)
- (modules server template game)
+ (modules server template game board)
  
  (libraries dream core core_unix)
  (preprocess (pps lwt_ppx)))
