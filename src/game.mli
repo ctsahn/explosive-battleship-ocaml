@@ -1,15 +1,19 @@
+type status = Empty | Miss | Ship | ShipHit | ShipSunken
+
+type board = status array array
+
 (* 
     Initialize the player's board.
 *)
-val initialize_board : int array array
+val initialize_board : board
 
 (*
-    Convert the board to a string to be used in the server. 
+    Convert the board to a string to be used for requests and responses. 
 *)
-val board_to_string : int array -> string
+val board_to_string : board -> string
 
 (*
-    Convert the position in the board (from the server) to x, y coordinates.
+    Convert the position in the board (from the server) to x, y coordinates for a 2D array.
 *)
 val convert_position : int -> int * int
 
@@ -32,7 +36,7 @@ val is_valid_attack : int -> bool
 
     Return true if a ship was hit, false otherwise.
 *)
-val attack : int -> int array array -> bool
+val attack : int -> board -> bool
 
 (*
     Given the board to attack and previous hits, the computer chooses a valid position on the 
@@ -40,9 +44,9 @@ val attack : int -> int array array -> bool
 
     Return true if a ship was hit, false otherwise.
 *)
-val cpu_attack : int array array -> int * int array -> bool
+val cpu_attack : board -> int * int array -> bool
 
 (*
     Check if a player has sunk all of the opponent's ships. 
 *)
-val is_win_state : int array array -> bool
+val is_win_state : board -> bool
