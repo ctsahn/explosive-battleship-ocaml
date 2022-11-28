@@ -1,7 +1,15 @@
-(*
-    Convert the position in the board (from the server) to x, y coordinates for a 2D array.
+(* (* 
+    Given the length of the ship and the positions for the starting and ending 
+    positions of the ship, place the ship on the player's board. 
+
+    Return true if placement is possible, false otherwise. 
 *)
-val convert_position : int -> int * int
+val place_ship : int -> int -> int -> bool
+
+(*
+    Randomly place CPU ships on a board.
+*)
+val place_cpu_ships: Board.t
 
 (* 
     Check whether the position in the board is valid. 
@@ -27,4 +35,18 @@ val cpu_attack : Board.t -> int * int array -> bool
 (*
     Check if a player has sunk all of the opponent's ships. 
 *)
-val is_win_state : Board.t -> bool
+val is_game_over : Board.t -> bool
+
+(* 
+    Create the boards from a saved game.
+
+    Boolean value is true if playing against the computer, false otherwise.
+*)
+val load_game : string -> bool -> Board.t * Board.t * bool 
+
+(*
+    Save the current game state.
+
+    Boolean value is true if playing against the computer, false otherwise.
+*)
+val save_game : Board.t -> Board.t -> bool -> string * bool *)

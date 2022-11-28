@@ -1,5 +1,6 @@
 type status = Empty | Miss | Ship | ShipHit | ShipSunken
 
+(* Treat board as a 2D array *)
 type t = status array array
 
 (*
@@ -9,28 +10,12 @@ val board_to_string : t -> string
 
 
 (* 
-    Randomly place ships on a board. 
+    Create a 10x10 array of "Empty" squares
 *)
 val initialize_board : t
 
-(* 
-    Given the length of the ship and the positions for the starting and ending 
-    positions of the ship, place the ship on the player's board. 
-
-    Return true if placement is possible, false otherwise. 
-*)
-val place_ship : int -> int -> int -> bool
-
-(* 
-    Create the boards from a saved game.
-
-    Boolean value is true if playing against the computer, false otherwise.
-*)
-val load_game : string -> bool -> t * t * bool 
 
 (*
-    Save the current game state.
-
-    Boolean value is true if playing against the computer, false otherwise.
+    Convert the position in the board (from the server) to x, y coordinates for a 2D array.
 *)
-val save_game : t -> t -> bool -> string * bool
+val convert_position : int -> int * int
