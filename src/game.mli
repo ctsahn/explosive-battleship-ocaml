@@ -25,7 +25,6 @@ val place_cpu_ships: Board.t
 val is_valid_attack : int -> bool
 
 
-
 (*
     Given the board to attack and previous hits, the computer chooses a valid position on the 
     opponent's board depending on its previous successful hits. 
