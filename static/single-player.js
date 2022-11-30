@@ -1,10 +1,7 @@
 let disable = false; //disable multiple clicks
 async function handleClick(cellid,formid){
-    
-    let currentTurn = document.getElementById("turn").innerHTML;
-
     // only allow clicks when it is your turn, and make sure a form exists in order for click to occur
-    if(( (currentTurn.includes("user") && cellid.includes("cpu")) || (currentTurn.includes("cpu") && cellid.includes("user")) ) && !disable && document.getElementById(formid)){
+    if(!disable && document.getElementById(formid)){
 
     
 

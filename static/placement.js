@@ -1,4 +1,4 @@
-// do this in different file TODO
+
 async function handleShipPlacement(cellid, formid){
 
     document.getElementById(cellid).style.backgroundColor = "purple";
@@ -19,6 +19,7 @@ function loadColors(){
       
     }
 
+    // highlight lengths of previous ships you've placed
     let shipStatus = document.getElementById("ship-status").innerHTML;
 
     for(let i=0;i<shipStatus.length;i++){
@@ -28,6 +29,7 @@ function loadColors(){
 
     }
 
+    // highlight length of current ship you place
     let shipSize = document.getElementById("placed-ship-size").innerHTML;
 
     // not 0
