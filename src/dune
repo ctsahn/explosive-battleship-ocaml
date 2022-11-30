@@ -3,12 +3,17 @@
   (modules board)
   (libraries core)
   (preprocess (pps ppx_jane)))
+(library
+  (name game)
+  (modules game)
+  (libraries board core)
+  (preprocess (pps ppx_jane)))
 
 (executable
  (name server)
- (modules server template game)
+ (modules server template )
  
- (libraries dream core core_unix board)
+ (libraries dream core core_unix board game)
  (preprocess (pps lwt_ppx)))
  
 

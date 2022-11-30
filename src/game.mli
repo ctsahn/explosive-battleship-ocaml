@@ -12,6 +12,22 @@ val place_ship : Board.t -> int -> int -> bool
     Return true if a ship was hit, false otherwise.
 *)
 val attack : Board.t -> int -> bool
+
+
+(*
+    Check if a player has sunk all of the opponent's ships. 
+*)
+val is_game_over : Board.t -> bool
+
+
+(*
+    Given the board to attack and previous hits, the computer chooses a valid position on the 
+    opponent's board depending on its previous successful hits. 
+
+    Return true if a ship was hit, false otherwise.
+*)
+val cpu_attack : Board.t  -> unit
+
 (*
 (*
     Randomly place CPU ships on a board.
@@ -25,18 +41,9 @@ val place_cpu_ships: Board.t
 val is_valid_attack : int -> bool
 
 
-(*
-    Given the board to attack and previous hits, the computer chooses a valid position on the 
-    opponent's board depending on its previous successful hits. 
 
-    Return true if a ship was hit, false otherwise.
-*)
-val cpu_attack : Board.t -> int * int array -> bool
 
-(*
-    Check if a player has sunk all of the opponent's ships. 
-*)
-val is_game_over : Board.t -> bool
+
 
 (* 
     Create the boards from a saved game.

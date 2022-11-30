@@ -1,7 +1,7 @@
 open Core;;
 open OUnit2;;
 open Board;;
-
+open Game;;
 let test_board_to_string _ =
   assert_equal "0000" @@ board_to_string (Array.make_matrix ~dimx:2 ~dimy:2 Empty);
   assert_equal "1111" @@ board_to_string (Array.make_matrix ~dimx:2 ~dimy:2 Miss);
@@ -23,8 +23,27 @@ let board_tests = "Board" >: test_list [
   "convert position" >:: test_convert_position;
 ]
 
+
+let make_sample_array = 
+  let arr = (Array.make_matrix ~dimx:2 ~dimy:2 Ship) in 
+  arr.(1).(1) <- ShipSunken;
+  arr.(0).(1) <- ShipHit;
+  arr
+
+
+let test_is_game_over _ = 
+  assert_equal true @@ is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 Empty);
+  assert_equal true @@ is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken);
+  assert_equal false @@ is_game_over (make_sample_array)
+
+
+
+let game_tests = "Game" >: test_list [
+  "is_game_over" >:: test_is_game_over
+]
 let series = "Battleship Tests" >::: [
   board_tests;
+  game_tests
 ]
 
 let () = 

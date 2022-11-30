@@ -3,8 +3,9 @@ open Board
 
 (* This is where the logic of the game goes *)
 
+let cpu_attack_list = []
 let place_ship (board:Board.t) (click1:int) (click2:int): bool = 
-
+  
   (*Only works for left to right clicks for now*)
   let row1 = fst (Board.convert_position click1) in
   let col1 = snd (Board.convert_position click1) in
@@ -26,3 +27,37 @@ let attack (board:Board.t) (pos:int) : bool =
   else(
      board.(x).(y) <- Board.Miss; 
      false) 
+
+let is_game_over (board:Board.t) : bool = 
+  (* Check if unsunken ships still exist *)
+  Array.for_all board ~f:(fun row -> not(Array.mem (row) (Board.ShipHit) ~equal: Board.equal_status) && not(Array.mem (row) (Board.Ship) ~equal: Board.equal_status))
+
+
+
+
+let cpu_attack (board:Board.t)  = 
+
+  if List.is_empty cpu_attack_list then 
+
+    let board_length = Array.length board in 
+
+    let attack_x = Random.int board_length in 
+    let attack_y = Random.int board_length in 
+
+    if Board.equal_status Board.Ship board.(attack_x).(attack_y) then (
+      board.(attack_x).(attack_y) <- Board.ShipHit; (*TODO: sink logic*)
+      )
+    (* miss *)
+    else(
+       board.(attack_x).(attack_y) <- Board.Miss; 
+       ) 
+
+
+    
+  
+
+
+
+
+   
+

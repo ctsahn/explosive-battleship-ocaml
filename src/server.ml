@@ -63,8 +63,8 @@ let handle_user_cpu_turn (user_move:string) request =
   let ship_hit = Game.attack player2_board user_move_int in 
 
   (* SAMPLE CPU MOVE *)
-  if not(ship_hit) then 
-    player1_board.(2).(3) <- Board.Miss;
+  if not(ship_hit) then (
+   Game.cpu_attack player1_board );
 
   Dream.html (Template.single_player_game_board ~user_board_status:(Board.board_to_string player1_board) ~cpu_board_status: (Board.board_to_string player2_board) request)
 

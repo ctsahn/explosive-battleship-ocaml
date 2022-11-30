@@ -4,4 +4,5 @@
    core
    ounit2 
    board
+   game
  ))
