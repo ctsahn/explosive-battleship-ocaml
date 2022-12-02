@@ -26,7 +26,7 @@ val is_game_over : Board.t -> bool
 
     Return true if a ship was hit, false otherwise.
 *)
-val cpu_attack : Board.t  -> unit
+val cpu_attack : Board.t  -> bool
 
 (*
 (*

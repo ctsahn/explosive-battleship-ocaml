@@ -285,7 +285,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn requ
   </html>
 
 
-let single_player_game_board ~user_board_status ~cpu_board_status request = 
+let single_player_game_board ~user_board_status ~cpu_board_status ~turn request = 
 <html>
 <head>
 <link rel="stylesheet" href="static/style.css">
@@ -321,10 +321,17 @@ let single_player_game_board ~user_board_status ~cpu_board_status request =
       </td>
 %       display_cpu_row row (col+1)
 %   in  
-<body>
-
-
+<body onload="handleCPUTurn()">
+% if turn = "cpu" then begin
+<form id="cpu-turn" method="get" action="/cpu_turn">
+</form>
+<h1> CPU turn </h1>
+% end
+% else begin 
 <h1> User turn </h1>
+% end; 
+
+
 
 <h2>User's board</h2>
 <div id="user-board-status" style="display: none;"><%s user_board_status %></div>

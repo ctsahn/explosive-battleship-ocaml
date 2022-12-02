@@ -14,8 +14,14 @@ async function handleClick(cellid,formid){
 
 }
 
+// when CPU turn, automatically send a request to the /cpu_turn endpoint
+async function handleCPUTurn(){
+  if(document.getElementById("cpu-turn")){
+    document.getElementById("cpu-turn").submit();
 
+  }
 
+}
 function loadColors(){
     
     let userBoardStatus = document.getElementById("user-board-status").innerHTML;

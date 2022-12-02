@@ -56,18 +56,27 @@ let handle_player_turn (user_move:string) (opponent_board:Board.t) (turn: string
   
   )
 
+
+let cpu_turn request= 
+  let ship_hit = Game.cpu_attack player1_board in 
+  if ship_hit then 
+
+  Dream.html (Template.single_player_game_board ~user_board_status:(Board.board_to_string player1_board) ~cpu_board_status: (Board.board_to_string player2_board) ~turn:"cpu" request)
+else 
+  Dream.html (Template.single_player_game_board ~user_board_status:(Board.board_to_string player1_board) ~cpu_board_status: (Board.board_to_string player2_board) ~turn:"user" request)
+
+
 (* For single player turn - we also handle CPU move here *)
-let handle_user_cpu_turn (user_move:string) request = 
+let handle_user_turn (user_move:string) request = 
   (* @julia very simple logic for hit/miss - move this to the attack function i think *)
   let user_move_int = Int.of_string user_move in
   let ship_hit = Game.attack player2_board user_move_int in 
 
-  (* SAMPLE CPU MOVE *)
-  if not(ship_hit) then (
-   Game.cpu_attack player1_board );
-
-  Dream.html (Template.single_player_game_board ~user_board_status:(Board.board_to_string player1_board) ~cpu_board_status: (Board.board_to_string player2_board) request)
-
+  (* continue user turn*)
+  if ship_hit then 
+    Dream.html (Template.single_player_game_board ~user_board_status:(Board.board_to_string player1_board) ~cpu_board_status: (Board.board_to_string player2_board) ~turn:"user" request)
+else 
+  Dream.html (Template.single_player_game_board ~user_board_status:(Board.board_to_string player1_board) ~cpu_board_status: (Board.board_to_string player2_board) ~turn:"cpu" request)
 
 
 let () =
@@ -154,18 +163,33 @@ let () =
     Dream.get  "/play_single_player"
       (fun request ->
         
-        Dream.html  (Template.single_player_game_board  ~user_board_status:(Board.board_to_string player1_board) ~cpu_board_status:(Board.board_to_string player2_board) request )); (* Start out with user turn with a blank message/board status*)
+        Dream.html  (Template.single_player_game_board  ~user_board_status:(Board.board_to_string player1_board) ~cpu_board_status:(Board.board_to_string player2_board) ~turn:"user" request )); (* Start out with user turn with a blank message/board status*)
 
-    (* single player turn *)
+    (* user turn *)
     Dream.post "/user_turn"
     (fun request ->
       match%lwt Dream.form request with
       | `Ok ["user-move", message] ->
         Core_unix.sleep 1; (* short delay so we can actually see the move being made *)
-        handle_user_cpu_turn message request
+        handle_user_turn message request
         
       | _ ->
         Dream.empty `Bad_Request);
+
+    (* CPU turn  - it is a GET request because we aren't sending any data *)
+    Dream.get "/cpu_turn"
+    
+      (fun request ->
+        Core_unix.sleep 1;
+        
+        (cpu_turn request)
+        
+      );
+    
+    
+
+    
+    
 
     Dream.get "/static/**" (Dream.static "./static");
 
