@@ -23,6 +23,35 @@ let board_tests = "Board" >: test_list [
   "convert position" >:: test_convert_position;
 ]
 
+let vertical_ship_sunk = 
+  let arr = (Array.make_matrix ~dimx:3 ~dimy:3 Empty) in 
+  arr.(1).(1) <- ShipHit;
+  arr.(0).(1) <- ShipHit;
+  arr
+
+let vertical_ship_not_sunk = 
+  let arr = (Array.make_matrix ~dimx:3 ~dimy:3 Ship) in 
+  arr.(1).(1) <- ShipHit;
+  arr.(0).(1) <- ShipHit;
+  arr
+
+let horizontal_ship_sunk = 
+  let arr = (Array.make_matrix ~dimx:3 ~dimy:3 Miss) in 
+  arr.(0).(1) <- ShipHit;
+  arr.(0).(0) <- ShipHit;
+  arr
+
+let horizontal_ship_not_sunk = 
+  let arr = (Array.make_matrix ~dimx:3 ~dimy:3 Ship) in 
+  arr.(0).(1) <- ShipHit;
+  arr.(0).(0) <- ShipHit;
+  arr
+
+let test_has_sunk _ = 
+  assert_equal true @@ has_sunk vertical_ship_sunk 0 1;
+  assert_equal false @@ has_sunk vertical_ship_not_sunk 1 1;
+  assert_equal true @@ has_sunk horizontal_ship_sunk 0 1;
+  assert_equal false @@ has_sunk horizontal_ship_not_sunk 0 0
 
 let make_sample_array = 
   let arr = (Array.make_matrix ~dimx:2 ~dimy:2 Ship) in 
@@ -39,6 +68,7 @@ let test_is_game_over _ =
 
 
 let game_tests = "Game" >: test_list [
+  "has_sunk" >:: test_has_sunk;
   "is_game_over" >:: test_is_game_over
 ]
 let series = "Battleship Tests" >::: [
