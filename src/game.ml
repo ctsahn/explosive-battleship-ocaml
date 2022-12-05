@@ -75,30 +75,46 @@ let cpu_attack (board:Board.t) : bool =
 
 
     
- let rec check_horizontal_sunk (board:Board.t) (row: int) (col: int) (dir: int) : bool = 
-  if col < 0 || col > 9 then true
-  else if equal_status board.(row).(col) Ship then false 
-  else if (equal_status board.(row).(col) Miss) || (equal_status board.(row).(col) Empty) then true
+ let rec check_horizontal_sunk (board: Board.t) (row: int) (col: int) (dir: int) : int option = 
+  if col < 0 || col > 9 then Some (col - dir)
+  else if equal_status board.(row).(col) Ship then None 
+  else if (equal_status board.(row).(col) Miss) || (equal_status board.(row).(col) Empty) then Some (col - dir)
   else check_horizontal_sunk board row (col + dir) dir
 
-let rec check_vertical_sunk (board:Board.t) (row: int) (col: int) (dir: int) : bool = 
-  if row < 0 || row > 9 then true
-  else if equal_status board.(row).(col) Ship then false 
-  else if (equal_status board.(row).(col) Miss) || (equal_status board.(row).(col) Empty) then true
+let rec check_vertical_sunk (board: Board.t) (row: int) (col: int) (dir: int) : int option = 
+  if row < 0 || row > 9 then Some (row - dir)
+  else if equal_status board.(row).(col) Ship then None 
+  else if (equal_status board.(row).(col) Miss) || (equal_status board.(row).(col) Empty) then Some (row - dir)
   else check_vertical_sunk board (row + dir) col dir
 
-let has_sunk (board:Board.t) (row: int) (col: int) : bool = 
+let rec sink_horizontal_ship (board: Board.t) (s: int) (e: int) (row: int) : bool = 
+  if s > e then true 
+  else let _ = board.(row).(s) <- ShipSunken in sink_horizontal_ship board (s + 1) e row
+
+let rec sink_vertical_ship (board: Board.t) (s: int) (e: int) (col: int) : bool = 
+  if s > e then true 
+  else let _ = board.(s).(col) <- ShipSunken in sink_vertical_ship board (s + 1) e col
+
+let has_sunk (board: Board.t) (row: int) (col: int) : bool = 
   (* horizontal *)
   if col > 0 && ((equal_status board.(row).(col - 1) Ship) || (equal_status board.(row).(col - 1) ShipHit)) then 
-    check_horizontal_sunk board row (col - 1) (-1) && check_horizontal_sunk board row (col + 1) 1
+    match check_horizontal_sunk board row (col - 1) (-1), check_horizontal_sunk board row (col + 1) 1 with 
+    | Some s, Some e -> sink_horizontal_ship board s e row
+    | _, _ -> false
   else if col < 9 && ((equal_status board.(row).(col + 1) Ship) || (equal_status board.(row).(col + 1) ShipHit)) then
-    check_horizontal_sunk board row (col - 1) (-1) && check_horizontal_sunk board row (col + 1) 1
+    match check_horizontal_sunk board row (col - 1) (-1), check_horizontal_sunk board row (col + 1) 1 with 
+    | Some s, Some e -> sink_horizontal_ship board s e row
+    | _, _ -> false
 
   (* vertical *)
   else if row > 0 && ((equal_status board.(row - 1).(col) Ship) || (equal_status board.(row + 1).(col) ShipHit)) then
-    check_vertical_sunk board (row - 1) col (-1) && check_vertical_sunk board (row + 1) col 1
+    match check_vertical_sunk board (row - 1) col (-1), check_vertical_sunk board (row + 1) col 1 with 
+    | Some s, Some e -> sink_vertical_ship board s e row
+    | _, _ -> false
   else if row < 9 && ((equal_status board.(row + 1).(col) Ship) || (equal_status board.(row + 1).(col) ShipHit)) then
-    check_vertical_sunk board (row - 1) col (-1) && check_vertical_sunk board (row + 1) col 1
+    match check_vertical_sunk board (row - 1) col (-1), check_vertical_sunk board (row + 1) col 1 with 
+    | Some s, Some e -> sink_vertical_ship board s e row
+    | _, _ -> false
 
   else false
 
