@@ -2,19 +2,19 @@
   (name board)
   (modules board)
   (libraries core)
-  (preprocess (pps ppx_jane)))
+  (preprocess (pps ppx_jane bisect_ppx) ))
 (library
   (name game)
   (modules game)
   (libraries board core)
-  (preprocess (pps ppx_jane)))
+  (preprocess (pps ppx_jane bisect_ppx)))
 
 (executable
  (name server)
  (modules server template )
  
  (libraries dream core core_unix board game)
- (preprocess (pps lwt_ppx)))
+ (preprocess (pps lwt_ppx bisect_ppx)))
  
 
  (rule

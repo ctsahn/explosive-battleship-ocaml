@@ -35,6 +35,11 @@ function loadColors() {
       document.getElementById("player1cell" + i).style.borderColor = "red";
 
     }
+    else if(player1BoardStatus[i]==4){
+      document.getElementById("player1cell" + i).style.backgroundColor = "red";
+      document.getElementById("player1cell" + i).style.color = "red";
+      document.getElementById("player1cell" + i).style.borderColor = "red";
+    } 
 
     // sunk
 
@@ -54,6 +59,11 @@ function loadColors() {
       document.getElementById("player2cell" + i).style.color = "red";
       document.getElementById("player2cell" + i).style.borderColor = "red";
     }
+    else if(player2BoardStatus[i]==4){
+      document.getElementById("player2cell" + i).style.backgroundColor = "red";
+      document.getElementById("player2cell" + i).style.color = "red";
+      document.getElementById("player2cell" + i).style.borderColor = "red";
+    } 
 
   }
 

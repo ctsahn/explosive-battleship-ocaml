@@ -1,7 +1,7 @@
 let disable = false; //disable multiple clicks
 async function handleClick(cellid,formid){
     // only allow clicks when it is your turn, and make sure a form exists in order for click to occur
-    if(!disable && document.getElementById(formid)){
+    if(!disable && document.getElementById(formid) && !document.getElementById("cpu-turn")){
 
     
 
@@ -43,6 +43,11 @@ function loadColors(){
           document.getElementById("usercell" + i).style.borderColor = "red";
           
         }
+        else if(userBoardStatus[i]==4){
+          document.getElementById("usercell" + i).style.backgroundColor = "red";
+          document.getElementById("usercell" + i).style.color = "red";
+          document.getElementById("usercell" + i).style.borderColor = "red";
+        } 
 
         // sunk
 
@@ -62,6 +67,11 @@ function loadColors(){
           document.getElementById("cpucell" + i).style.color = "red";
           document.getElementById("cpucell" + i).style.borderColor = "red";
         }
+        else if(cpuBoardStatus[i]==4){
+          document.getElementById("cpucell" + i).style.backgroundColor = "red";
+          document.getElementById("cpucell" + i).style.color = "red";
+          document.getElementById("cpucell" + i).style.borderColor = "red";
+        } 
       
     }
 
