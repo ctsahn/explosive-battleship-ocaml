@@ -31,6 +31,8 @@ val has_sunk : Board.t -> int -> int -> bool
 *)
 val cpu_attack : Board.t -> bool
 
+val has_sunk : Board.t -> int -> int -> bool 
+
 (*
 (*
     Randomly place CPU ships on a board.
