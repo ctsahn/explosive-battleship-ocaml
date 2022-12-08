@@ -31,8 +31,6 @@ val has_sunk : Board.t -> int -> int -> bool
 *)
 val cpu_attack : Board.t -> bool
 
-val has_sunk : Board.t -> int -> int -> bool 
-
 (*
 (*
     Randomly place CPU ships on a board.
@@ -44,9 +42,6 @@ val place_cpu_ships: Board.t
     ie. player does not choose a previously chosen position.
 *)
 val is_valid_attack : int -> bool
-
-
-
 
 
 
