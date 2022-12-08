@@ -9,6 +9,7 @@ let cpu_attack_direction = ref ""
 
 let rec check_above_below (board : Board.t) (row : int) (col1 : int)
     (col2 : int) : bool =
+  (* Check vertically if there already is a ship placed where the new ship will go. *)
   if col1 > col2 then true
   else if col1 > 0 && equal_status board.(row).(col1 - 1) Ship then false
   else if col1 <  Array.length board - 1 && equal_status board.(row).(col1 + 1) Ship then false
@@ -16,6 +17,7 @@ let rec check_above_below (board : Board.t) (row : int) (col1 : int)
 
 let rec check_left_right (board : Board.t) (row1 : int) (row2 : int) (col : int)
     : bool =
+  (* Check horizontally if there already is a ship placed where the new ship will go. *)
   if row1 > row2 then true
   else if row1 > 0 && equal_status board.(row1 - 1).(col) Ship then false
   else if row1 <  Array.length board - 1 && equal_status board.(row1 + 1).(col) Ship then false
@@ -31,11 +33,11 @@ let place_ship (board : Board.t) (click1 : int) (click2 : int) : bool =
   else if not (check_above_below board row1 col1 col2) then false
   else if not (check_left_right board row1 row2 col1) then false
   else if row1 = row2 then
-    (* horizontal ship *)
+    (* Place the horizontal ship *)
     let _ = Array.fill board.(row1) ~pos:col1 ~len:(col2 - col1 + 1) Ship in
     true
   else
-    (* vertical ship *)
+    (* Place the vertical ship *)
     let _ =
       for i = row1 to row2 do
         Array.fill board.(i) ~pos:col1 ~len:1 Ship
@@ -51,6 +53,7 @@ let is_game_over (board : Board.t) : bool =
 
 let rec check_horizontal_sunk (board : Board.t) (row : int) (col : int)
     (dir : int) : int option =
+  (* Check if the horizontal ship has been sunk *)
   if col < 0 || col > Array.length board - 1 then Some (col - dir)
   else if equal_status board.(row).(col) Ship then None
   else if
@@ -60,6 +63,7 @@ let rec check_horizontal_sunk (board : Board.t) (row : int) (col : int)
 
 let rec check_vertical_sunk (board : Board.t) (row : int) (col : int)
     (dir : int) : int option =
+  (* Check if the vertical ship has been sunk *)
   if row < 0 || row > Array.length board - 1 then Some (row - dir)
   else if equal_status board.(row).(col) Ship then None
   else if
@@ -69,6 +73,7 @@ let rec check_vertical_sunk (board : Board.t) (row : int) (col : int)
 
 let rec sink_horizontal_ship (board : Board.t) (s : int) (e : int) (row : int) :
     bool =
+  (* Change the status of the horizontal ship to ShipSunken *)
   if s > e then true
   else
     let _ = board.(row).(s) <- ShipSunken in
@@ -76,13 +81,14 @@ let rec sink_horizontal_ship (board : Board.t) (s : int) (e : int) (row : int) :
 
 let rec sink_vertical_ship (board : Board.t) (s : int) (e : int) (col : int) :
     bool =
+  (* Change the status of the vertical ship to ShipSunken. *)
   if s > e then true
   else
     let _ = board.(s).(col) <- ShipSunken in
     sink_vertical_ship board (s + 1) e col
 
 let has_sunk (board : Board.t) (row : int) (col : int) : bool =
-  (* horizontal *)
+  (* Check if ship is horizontal *)
   if
     col > 0
     && (equal_status board.(row).(col - 1) Ship
@@ -104,7 +110,8 @@ let has_sunk (board : Board.t) (row : int) (col : int) : bool =
         check_horizontal_sunk board row (col + 1) 1 )
     with
     | Some s, Some e -> sink_horizontal_ship board s e row
-    | _, _ -> false (* vertical *)
+    | _, _ -> false 
+  (* Check if ship is vertical *)
   else if
     row > 0
     && (equal_status board.(row - 1).(col) Ship
