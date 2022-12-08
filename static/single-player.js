@@ -1,7 +1,7 @@
 let disable = false; //disable multiple clicks
-async function handleClick(cellid,formid){
+async function handleClick(cellid,formid,gameOver){
     // only allow clicks when it is your turn, and make sure a form exists in order for click to occur
-    if(!disable && document.getElementById(formid) && !document.getElementById("cpu-turn")){
+    if(!disable && document.getElementById(formid) && !document.getElementById("cpu-turn") && !gameOver){
       document.getElementById(cellid).style.backgroundColor = "red";
       document.getElementById(formid).submit();
       disable=true;
@@ -11,8 +11,8 @@ async function handleClick(cellid,formid){
 }
 
 // when CPU turn, automatically send a request to the /cpu_turn endpoint
-async function handleCPUTurn(){
-  if(document.getElementById("cpu-turn")){
+async function handleCPUTurn(gameOver){
+  if(document.getElementById("cpu-turn") &&!gameOver){
     document.getElementById("cpu-turn").submit();
   }
 

@@ -136,7 +136,7 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size reque
   </html>
 
 
-let two_player_game_board ~player1_board_status ~player2_board_status ~turn request = 
+let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~game_over request = 
   <html>
   <head>
   <link rel="stylesheet" href="static/style.css">
@@ -151,7 +151,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn requ
 %         if row = 0 then 
 %          (Int.to_string col)
 %         else (Int.to_string row)^(Int.to_string col) in 
-        <td class="light" id=<%s "player1cell"^cell_num %>  onclick=<%s "handleClick('player1cell" ^cell_num^ "','player1form"^cell_num^"'" ^ ",'" ^turn^ "')" %> >
+        <td class="light" id=<%s "player1cell"^cell_num %>  onclick=<%s "handleClick('player1cell" ^cell_num^ "','player1form"^cell_num^"'" ^ ",'" ^turn^ "'," ^ game_over ^")" %> >
         <form id=<%s "player1form" ^ cell_num %> method="post" action="/player2_turn">
         <%s! Dream.csrf_tag request %>
         <input type="hidden" name="player2-move" value=<%s cell_num %> >
@@ -169,7 +169,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn requ
 %         if row = 0 then 
 %          (Int.to_string col)
 %         else (Int.to_string row)^(Int.to_string col) in 
-        <td class="light" id=<%s "player2cell"^cell_num %>  onclick=<%s "handleClick('player2cell" ^cell_num^ "','player2form"^cell_num^"'" ^ ",'"^turn^ "')" %> >
+        <td class="light" id=<%s "player2cell"^cell_num %>  onclick=<%s "handleClick('player2cell" ^cell_num^ "','player2form"^cell_num^"'" ^ ",'"^turn^"'," ^ game_over ^ ")" %> >
         <form id=<%s "player2form" ^ cell_num %> method="post" action="/player1_turn">
         <%s! Dream.csrf_tag request %>
         <input type="hidden" name="player1-move" value=<%s cell_num %> >
@@ -180,7 +180,9 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn requ
   <body>
 
 %     let turn_display = 
-%       if (turn = "player1") then "Player 1's turn!"
+%       if (game_over = "true" && turn = "player1") then "Player 1 wins!"
+%       else if (game_over = "true" && turn = "player2") then "Player 2 wins!"                    
+%       else if (turn = "player1") then "Player 1's turn!"
 %       else "Player 2's turn!" in
   <h1 id="turn"> <%s turn_display %> </h1>
 
@@ -285,7 +287,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn requ
   </html>
 
 
-let single_player_game_board ~user_board_status ~cpu_board_status ~turn request = 
+let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_over request = 
 <html>
 <head>
 <link rel="stylesheet" href="static/style.css">
@@ -313,7 +315,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn request 
 %         if row = 0 then 
 %          (Int.to_string col)
 %         else (Int.to_string row)^(Int.to_string col) in 
-      <td class="light" id=<%s "cpucell"^cell_num %>  onclick=<%s "handleClick('cpucell" ^cell_num^ "','cpuform"^cell_num^"')" %> >
+      <td class="light" id=<%s "cpucell"^cell_num %>  onclick=<%s "handleClick('cpucell" ^cell_num^ "','cpuform"^cell_num^"'," ^game_over^ ")" %> >
       <form id=<%s "cpuform" ^ cell_num %> method="post" action="/user_turn">
       <%s! Dream.csrf_tag request %>
       <input type="hidden" name="user-move" value=<%s cell_num %> >
@@ -321,8 +323,15 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn request 
       </td>
 %       display_cpu_row row (col+1)
 %   in  
-<body onload="handleCPUTurn()">
-% if turn = "cpu" then begin
+<body onload=<%s "handleCPUTurn("^game_over^")" %> >
+
+% if turn = "user" && game_over = "true" then begin
+<h1> User wins! </h1>
+% end
+% else if turn = "cpu" && game_over = "true" then begin 
+<h1> CPU wins! </h1>
+% end
+% else if turn = "cpu" then begin
 <form id="cpu-turn" method="get" action="/cpu_turn">
 </form>
 <h1> CPU turn </h1>
@@ -432,3 +441,4 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn request 
 </script>
 </body>
 </html>
+

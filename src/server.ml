@@ -40,11 +40,18 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t)
   let ship_hit = Game.attack opponent_board user_move_int in
 
   if ship_hit then
-    Dream.html
-      (Template.two_player_game_board
-         ~player1_board_status:(Board.board_to_string player1_board)
-         ~player2_board_status:(Board.board_to_string player2_board)
-         ~turn request)
+    if Game.is_game_over opponent_board then
+      Dream.html
+        (Template.two_player_game_board
+           ~player1_board_status:(Board.board_to_string player1_board)
+           ~player2_board_status:(Board.board_to_string player2_board)
+           ~turn ~game_over:"true" request)
+    else
+      Dream.html
+        (Template.two_player_game_board
+           ~player1_board_status:(Board.board_to_string player1_board)
+           ~player2_board_status:(Board.board_to_string player2_board)
+           ~turn ~game_over:"false" request)
   else
     (* if miss, rotate turn *)
     let new_turn =
@@ -54,41 +61,55 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t)
       (Template.two_player_game_board
          ~player1_board_status:(Board.board_to_string player1_board)
          ~player2_board_status:(Board.board_to_string player2_board)
-         ~turn:new_turn request)
+         ~turn:new_turn ~game_over:"false" request)
 
 let cpu_turn request =
   let ship_hit = Game.cpu_attack player1_board in
   if ship_hit then
-    Dream.html
-      (Template.single_player_game_board
-         ~user_board_status:(Board.board_to_string player1_board)
-         ~cpu_board_status:(Board.board_to_string player2_board)
-         ~turn:"cpu" request)
+    if Game.is_game_over player1_board then
+      Dream.html
+        (Template.single_player_game_board
+           ~user_board_status:(Board.board_to_string player1_board)
+           ~cpu_board_status:(Board.board_to_string player2_board)
+           ~turn:"cpu" ~game_over:"true" request)
+    else
+      Dream.html
+        (Template.single_player_game_board
+           ~user_board_status:(Board.board_to_string player1_board)
+           ~cpu_board_status:(Board.board_to_string player2_board)
+           ~turn:"cpu" ~game_over:"false" request)
   else
     (* if miss, rotate turn *)
     Dream.html
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
          ~cpu_board_status:(Board.board_to_string player2_board)
-         ~turn:"user" request)
+         ~turn:"user" ~game_over:"false" request)
 
 (* For single player turn *)
 let handle_user_turn (user_move : string) request =
   let user_move_int = Int.of_string user_move in
   let ship_hit = Game.attack player2_board user_move_int in
   if ship_hit then
-    Dream.html
-      (Template.single_player_game_board
-         ~user_board_status:(Board.board_to_string player1_board)
-         ~cpu_board_status:(Board.board_to_string player2_board)
-         ~turn:"user" request)
+    if Game.is_game_over player2_board then
+      Dream.html
+        (Template.single_player_game_board
+           ~user_board_status:(Board.board_to_string player1_board)
+           ~cpu_board_status:(Board.board_to_string player2_board)
+           ~turn:"user" ~game_over:"true" request)
+    else
+      Dream.html
+        (Template.single_player_game_board
+           ~user_board_status:(Board.board_to_string player1_board)
+           ~cpu_board_status:(Board.board_to_string player2_board)
+           ~turn:"user" ~game_over:"false" request)
   else
     (* if miss, rotate turn *)
     Dream.html
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
          ~cpu_board_status:(Board.board_to_string player2_board)
-         ~turn:"cpu" request)
+         ~turn:"cpu" ~game_over:"false" request)
 
 let () =
   Dream.run @@ Dream.logger @@ Dream.memory_sessions
@@ -144,7 +165,7 @@ let () =
                (Template.two_player_game_board
                   ~player1_board_status:(Board.board_to_string player1_board)
                   ~player2_board_status:(Board.board_to_string player2_board)
-                  ~turn:"player1" request));
+                  ~turn:"player1" ~game_over:"false" request));
          (* Start out with user turn with a blank message/board status*)
          Dream.post "/player1_turn" (fun request ->
              match%lwt Dream.form request with
@@ -166,7 +187,7 @@ let () =
                (Template.single_player_game_board
                   ~user_board_status:(Board.board_to_string player1_board)
                   ~cpu_board_status:(Board.board_to_string player2_board)
-                  ~turn:"user" request));
+                  ~turn:"user" ~game_over:"false" request));
          (* user turn *)
          Dream.post "/user_turn" (fun request ->
              match%lwt Dream.form request with

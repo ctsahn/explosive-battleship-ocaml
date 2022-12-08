@@ -1,7 +1,8 @@
 let disable = false; //disable multiple clicks
-async function handleClick(cellid, formid, currentTurn) {
+async function handleClick(cellid, formid, currentTurn,gameOver) {
+
   // only allow clicks when it is your turn, and make sure a form exists in order for click to occur
-  if (((currentTurn.includes("player1") && cellid.includes("player2")) || (currentTurn.includes("player2") && cellid.includes("player1"))) && !disable && document.getElementById(formid)) {
+  if (((currentTurn.includes("player1") && cellid.includes("player2")) || (currentTurn.includes("player2") && cellid.includes("player1"))) && !disable && document.getElementById(formid) && !gameOver ) {
     document.getElementById(cellid).style.backgroundColor = "red";
     document.getElementById(formid).submit();
     disable = true;
