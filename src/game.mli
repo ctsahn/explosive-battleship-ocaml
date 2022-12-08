@@ -1,10 +1,10 @@
 (* 
-    Given the length of the ship and the positions for the starting and ending 
+    Given the positions for the starting and ending 
     positions of the ship, place the ship on the player's board. 
 
-    Return true if placement is possible, false otherwise. 
+    Return length of ship if placement is possible, -1 otherwise. 
 *)
-val place_ship : Board.t -> int -> int -> bool
+val place_ship : Board.t -> int -> int -> int
 
 (* 
     Given the position and board to attack, decide whether the player hit a ship or missed. 

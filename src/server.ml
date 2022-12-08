@@ -15,21 +15,22 @@ let click2 = ref 0
 let player1_ship_status = ref "" (* User placement of ships - which ship lengths have been placed so far *)
 let player2_ship_status = ref "" (* User placement of ships - which ship lengths have been placed so far *)
 
+let ship_size = ref "-1"
+
 let handle_ship_placement (turn: string) (player_board : Board.t) (player_ship_status: string ref) (user_move:string) request  = 
-  
   if !ship_placed then (
     click2 := Int.of_string user_move;
-    let _ = Game.place_ship player_board !click1 !click2 in
     ship_placed:=false;
-    let ship_size = Int.to_string (!click2 - !click1+1) in
-    player_ship_status:= (!player_ship_status) ^ ship_size;
+    (* let ship_size = Int.to_string (!click2 - !click1+1) in *)
+    ship_size := Int.to_string (Game.place_ship player_board !click1 !click2);
+    player_ship_status := (!player_ship_status) ^ ship_size.contents;
   )
   else (
     click1 := Int.of_string user_move;
     ship_placed := true;
   );
   
-  Dream.html (Template.ship_placement ~turn: turn ~user_board_status: (Board.board_to_string player_board) ~ship_status: (!player_ship_status ) ~placed_ship_size: (Int.to_string (!click2 - !click1+1)) request )
+  Dream.html (Template.ship_placement ~turn: turn ~user_board_status: (Board.board_to_string player_board) ~ship_status: (!player_ship_status ) ~placed_ship_size: ship_size.contents request )
 
 (* For 2-player turns *)
 let handle_player_turn (user_move:string) (opponent_board:Board.t) (turn: string) request = 
