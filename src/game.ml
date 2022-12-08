@@ -3,22 +3,31 @@ open Board
 
 (* This is where the logic of the game goes *)
 
+(* Possible horizontal searches for the CPU, after a hit *)
 let cpu_horz_queue = Queue.create ()
+
+(* Possible vertical searches for the CPU, after a hit *)
 let cpu_vert_queue = Queue.create ()
+
+(* The direction the CPU is smartly attacking. "horizontal" or "vertical" after a hit, or "" when no specified direction of attack *)
 let cpu_attack_direction = ref ""
 
 let rec check_above_below (board : Board.t) (row : int) (col1 : int)
     (col2 : int) : bool =
   if col1 > col2 then true
   else if col1 > 0 && equal_status board.(row).(col1 - 1) Ship then false
-  else if col1 <  Array.length board - 1 && equal_status board.(row).(col1 + 1) Ship then false
+  else if
+    col1 < Array.length board - 1 && equal_status board.(row).(col1 + 1) Ship
+  then false
   else check_above_below board row (col1 + 1) col2
 
 let rec check_left_right (board : Board.t) (row1 : int) (row2 : int) (col : int)
     : bool =
   if row1 > row2 then true
   else if row1 > 0 && equal_status board.(row1 - 1).(col) Ship then false
-  else if row1 <  Array.length board - 1 && equal_status board.(row1 + 1).(col) Ship then false
+  else if
+    row1 < Array.length board - 1 && equal_status board.(row1 + 1).(col) Ship
+  then false
   else check_left_right board (row1 + 1) row2 col
 
 let place_ship (board : Board.t) (click1 : int) (click2 : int) : bool =
@@ -129,6 +138,7 @@ let has_sunk (board : Board.t) (row : int) (col : int) : bool =
     | _, _ -> false
   else false
 
+(* Player attack *)
 let attack (board : Board.t) (pos : int) : bool =
   let converted_position = Board.convert_position pos in
   let row = fst converted_position in
@@ -137,20 +147,21 @@ let attack (board : Board.t) (pos : int) : bool =
   if Board.equal_status Board.Ship board.(row).(col) then (
     board.(row).(col) <- Board.ShipHit;
     let _ = has_sunk board row col in
-    (* check if the hit ship has sunk *)
-    true
-    (* miss *))
+    (* check if the hit ship has sunk - however, we have no use for the returned bool *)
+    true)
   else (
     board.(row).(col) <- Board.Miss;
     false)
 
 let is_valid_attack (board : Board.t) (row : int) (col : int) : bool =
+  (* Must not be out of bounds, and should not have been fired upon *)
   row >= 0 && col >= 0
   && row < Array.length board
   && col < Array.length board
   && (Board.equal_status Board.Empty board.(row).(col)
      || Board.equal_status Board.Ship board.(row).(col))
 
+(* CPU must find a previously unfired square to attack *)
 let rec find_valid_attack (board : Board.t) =
   let board_length = Array.length board in
 
@@ -166,12 +177,15 @@ let attack_given_coords (board : Board.t) (attack_row : int) (attack_col : int)
   if Board.equal_status Board.Ship board.(attack_row).(attack_col) then (
     board.(attack_row).(attack_col) <- Board.ShipHit;
 
-    (* Reset queues and attack direction after a sink *)
+    (* Clear queues and attack direction after a sink - go back to random search *)
     if has_sunk board attack_row attack_col then (
       Queue.clear cpu_horz_queue;
       Queue.clear cpu_vert_queue;
-      cpu_attack_direction := "" (* no sink detected - keep queueing *))
+      cpu_attack_direction := "")
     else (
+      (* no sink detected - keep queueing potential moves *)
+
+      (* Our current attack direction is horizontal or not yet set, so queue possible horizontal moves (left or right of the hit cell)*)
       if
         String.( = ) !cpu_attack_direction ""
         || String.( = ) !cpu_attack_direction "horizontal"
@@ -181,6 +195,7 @@ let attack_given_coords (board : Board.t) (attack_row : int) (attack_col : int)
         if is_valid_attack board attack_row (attack_col - 1) then
           Queue.enqueue cpu_horz_queue (attack_row, attack_col - 1));
 
+      (* Our current attack direction is vertical or not yet set, so queue possible vertical moves (above or below of the hit cell)*)
       if
         String.( = ) !cpu_attack_direction ""
         || String.( = ) !cpu_attack_direction "vertical"
@@ -193,77 +208,55 @@ let attack_given_coords (board : Board.t) (attack_row : int) (attack_col : int)
     true)
   else (
     board.(attack_row).(attack_col) <- Board.Miss;
-
     false)
 
+(* Core.Queue has no remove function, so use filter to delete a tuple from the queue *)
 let remove_from_queue (queue : (int * int) Queue.t) (coord : int * int) : unit =
   Queue.filter_inplace queue ~f:(fun x ->
       match x with row, col -> row <> fst coord || col <> snd coord)
 
 let cpu_attack (board : Board.t) : bool =
   if Queue.is_empty cpu_vert_queue && Queue.is_empty cpu_horz_queue then
+    (* No smart moves - just attack randomly *)
     let attack_target = find_valid_attack board in
     let attack_row = fst attack_target in
     let attack_col = snd attack_target in
 
     attack_given_coords board attack_row attack_col
   else if Queue.is_empty cpu_vert_queue then (
-    (*let attack_target = Queue.dequeue_exn cpu_horz_queue in *)
+    (* CPU has no vertical moves to make, but does have smart horizontal moves available *)
+
+    (* Pick a random horizontal move from the queue, then delete it so it's no longer available *)
     let attack_target =
       Queue.get cpu_horz_queue (Random.int (Queue.length cpu_horz_queue))
     in
-
     remove_from_queue cpu_horz_queue attack_target;
 
     let attack_row = fst attack_target in
     let attack_col = snd attack_target in
 
+    (* Only make horizontal moves from now on *)
     cpu_attack_direction := "horizontal";
 
     attack_given_coords board attack_row attack_col)
   else if Queue.is_empty cpu_horz_queue then (
-    (*let attack_target = Queue.dequeue_exn cpu_vert_queue in*)
+    (* CPU has no horizontal moves to make, but does have smart vertical moves available *)
+
+    (* Pick a random vertical move from the queue, then delete it so it's no longer available *)
     let attack_target =
       Queue.get cpu_vert_queue (Random.int (Queue.length cpu_vert_queue))
     in
-
     remove_from_queue cpu_vert_queue attack_target;
 
     let attack_row = fst attack_target in
     let attack_col = snd attack_target in
+
+    (* Only make vertical moves from now on *)
     cpu_attack_direction := "vertical";
 
-    attack_given_coords board attack_row attack_col
-    (*both horz and vert queue have are not empty and we have possible coords to attack in both ways*))
-  else if String.( = ) !cpu_attack_direction "" then
-    (* pick horz or vert randomly *)
-    if Random.int 2 = 1 then (
-      cpu_attack_direction := "horizontal";
-      (*let attack_target = Queue.dequeue_exn cpu_horz_queue in*)
-      let attack_target =
-        Queue.get cpu_horz_queue (Random.int (Queue.length cpu_horz_queue))
-      in
-      remove_from_queue cpu_horz_queue attack_target;
-
-      let attack_row = fst attack_target in
-      let attack_col = snd attack_target in
-
-      attack_given_coords board attack_row attack_col)
-    else (
-      cpu_attack_direction := "vertical";
-      (*let attack_target = Queue.dequeue_exn cpu_vert_queue in*)
-      let attack_target =
-        Queue.get cpu_vert_queue (Random.int (Queue.length cpu_vert_queue))
-      in
-
-      remove_from_queue cpu_vert_queue attack_target;
-
-      let attack_row = fst attack_target in
-      let attack_col = snd attack_target in
-
-      attack_given_coords board attack_row attack_col)
+    attack_given_coords board attack_row attack_col)
   else if String.( = ) !cpu_attack_direction "vertical" then (
-    (*let attack_target = Queue.dequeue_exn cpu_vert_queue in*)
+    (* Attack direction is vertical, so make vertical moves *)
     let attack_target =
       Queue.get cpu_vert_queue (Random.int (Queue.length cpu_vert_queue))
     in
@@ -273,8 +266,8 @@ let cpu_attack (board : Board.t) : bool =
     let attack_col = snd attack_target in
 
     attack_given_coords board attack_row attack_col (*horizaontal*))
-  else
-    (*let attack_target = Queue.dequeue_exn cpu_horz_queue in*)
+  else if String.( = ) !cpu_attack_direction "horizontal" then (
+    (* Attack direction is horizontal, so make horizontal moves *)
     let attack_target =
       Queue.get cpu_horz_queue (Random.int (Queue.length cpu_horz_queue))
     in
@@ -283,4 +276,28 @@ let cpu_attack (board : Board.t) : bool =
     let attack_row = fst attack_target in
     let attack_col = snd attack_target in
 
-    attack_given_coords board attack_row attack_col
+    attack_given_coords board attack_row attack_col)
+  else if Random.int 2 = 1 then (
+    (* Both horizontal and vertical queues are not empty, so we have possible squares to attack in both ways*)
+    (* Randomly pick horizontal attack direction *)
+    cpu_attack_direction := "horizontal";
+    let attack_target =
+      Queue.get cpu_horz_queue (Random.int (Queue.length cpu_horz_queue))
+    in
+    remove_from_queue cpu_horz_queue attack_target;
+    let attack_row = fst attack_target in
+    let attack_col = snd attack_target in
+
+    attack_given_coords board attack_row attack_col)
+  else (
+    (* Randomly pick vertical attack direction *)
+    cpu_attack_direction := "vertical";
+    let attack_target =
+      Queue.get cpu_vert_queue (Random.int (Queue.length cpu_vert_queue))
+    in
+
+    remove_from_queue cpu_vert_queue attack_target;
+
+    let attack_row = fst attack_target in
+    let attack_col = snd attack_target in
+    attack_given_coords board attack_row attack_col)

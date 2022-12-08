@@ -9,11 +9,11 @@ type t = status array array
 val board_to_string : t -> string
 
 (*
-     Create a 10x10 array of "Empty" squares
+     Create two 10x10 arrays of "Empty" squares for each player
 *)
 val initialize_boards : t * t
 
 (*
-    Convert the position in the board (from the server) to x, y coordinates for a 2D array.
+    Convert the single integer position from the server to x, y coordinates (row, col) for a 2D array.
 *)
 val convert_position : int -> int * int

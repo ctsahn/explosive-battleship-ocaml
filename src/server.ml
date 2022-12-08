@@ -1,14 +1,9 @@
 open Core
 
-(* We should probably move the creation of these arrays to game.ml *)
-
-(* 0 for nothing, 1 for miss, 2 for ship, 3 for ship hit, 4 for ship sunk *)
 let boards = Board.initialize_boards
 let player1_board = fst boards (* User's board when single player *)
 let player2_board = snd boards (* CPU's board when single player *)
-
-(* true after two clicks *)
-let ship_placed = ref false
+let ship_placed = ref false (* true after two clicks *)
 let click1 = ref 0
 let click2 = ref 0
 let player1_ship_status = ref ""
@@ -41,17 +36,17 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t)
     (turn : string) request =
   let user_move_int = Int.of_string user_move in
 
-  (* If a ship was hit, true*)
+  (* If a ship was hit, true *)
   let ship_hit = Game.attack opponent_board user_move_int in
 
-  (* if hit *)
   if ship_hit then
     Dream.html
       (Template.two_player_game_board
          ~player1_board_status:(Board.board_to_string player1_board)
          ~player2_board_status:(Board.board_to_string player2_board)
-         ~turn request) (* if miss, rotate turn *)
+         ~turn request)
   else
+    (* if miss, rotate turn *)
     let new_turn =
       if String.( = ) turn "player1" then "player2" else "player1"
     in
@@ -70,19 +65,17 @@ let cpu_turn request =
          ~cpu_board_status:(Board.board_to_string player2_board)
          ~turn:"cpu" request)
   else
+    (* if miss, rotate turn *)
     Dream.html
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
          ~cpu_board_status:(Board.board_to_string player2_board)
          ~turn:"user" request)
 
-(* For single player turn - we also handle CPU move here *)
+(* For single player turn *)
 let handle_user_turn (user_move : string) request =
-  (* @julia very simple logic for hit/miss - move this to the attack function i think *)
   let user_move_int = Int.of_string user_move in
   let ship_hit = Game.attack player2_board user_move_int in
-
-  (* continue user turn*)
   if ship_hit then
     Dream.html
       (Template.single_player_game_board
@@ -90,6 +83,7 @@ let handle_user_turn (user_move : string) request =
          ~cpu_board_status:(Board.board_to_string player2_board)
          ~turn:"user" request)
   else
+    (* if miss, rotate turn *)
     Dream.html
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
@@ -109,7 +103,7 @@ let () =
                   ~user_board_status:(Board.board_to_string player1_board)
                   ~ship_status:!player1_ship_status ~placed_ship_size:"0"
                   request));
-         (* send info of one square for placement *)
+         (* send position of one click for ship placement *)
          Dream.post "/placement" (fun request ->
              match%lwt Dream.form request with
              | `Ok [ ("user-place", message) ] ->
@@ -173,8 +167,6 @@ let () =
                   ~user_board_status:(Board.board_to_string player1_board)
                   ~cpu_board_status:(Board.board_to_string player2_board)
                   ~turn:"user" request));
-         (* Start out with user turn with a blank message/board status*)
-
          (* user turn *)
          Dream.post "/user_turn" (fun request ->
              match%lwt Dream.form request with
@@ -186,7 +178,6 @@ let () =
          (* CPU turn  - it is a GET request because we aren't sending any data *)
          Dream.get "/cpu_turn" (fun request ->
              Core_unix.sleep 1;
-
              cpu_turn request);
          Dream.get "/static/**" (Dream.static "./static");
        ]

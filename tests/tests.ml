@@ -124,6 +124,14 @@ let test_place_ship _ =
   assert_equal Ship @@ arr.(4).(8);
   assert_equal Ship @@ arr.(5).(8)
 
+let test_is_valid_attack _ = 
+  let miss_arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in
+  
+  assert_equal false @@ is_valid_attack miss_arr 1 1; 
+  assert_equal true @@ is_valid_attack empty_array 1 1
+
+
+
 let game_tests =
   "Game"
   >: test_list
@@ -133,6 +141,7 @@ let game_tests =
          "cpu_attack" >:: test_cpu_attack;
          "attack" >:: test_attack;
          "place_ship" >:: test_place_ship;
+         "is_valid_attack" >:: test_is_valid_attack;
        ]
 
 let series = "Battleship Tests" >::: [ board_tests; game_tests ]
