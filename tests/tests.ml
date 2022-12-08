@@ -88,30 +88,41 @@ let test_is_game_over _ =
   @@ is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken);
   assert_equal false @@ is_game_over make_sample_array
 
-let make_empty_array =
-  let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  arr
+let empty_array =
+  Array.make_matrix ~dimx:10 ~dimy:10 Empty
 
-let make_full_array =
-  let arr = Array.make_matrix ~dimx:10 ~dimy:10 Ship in
-  arr
+let ship_full_array =
+  Array.make_matrix ~dimx:10 ~dimy:10 Ship
 
 let test_attack _ =
-  assert_equal true @@ attack make_full_array 4;
-  assert_equal false @@ attack make_empty_array 4
+  assert_equal true @@ attack ship_full_array 4;
+  assert_equal false @@ attack empty_array 4
 
 let test_cpu_attack _ =
-  assert_equal false @@ cpu_attack make_empty_array;
+  assert_equal false @@ cpu_attack empty_array;
   assert_equal true @@ Queue.is_empty cpu_horz_queue;
   assert_equal true @@ Queue.is_empty cpu_vert_queue;
-  assert_equal true @@ cpu_attack make_full_array;
+  assert_equal true @@ cpu_attack ship_full_array;
   assert_equal "" @@ !cpu_attack_direction;
   assert_equal false @@ Queue.is_empty cpu_horz_queue;
   assert_equal false @@ Queue.is_empty cpu_vert_queue;
-  assert_equal true @@ cpu_attack make_full_array;
+  assert_equal true @@ cpu_attack ship_full_array;
   assert_equal true
   @@ (String.( = ) !cpu_attack_direction "horizontal"
      || String.( = ) !cpu_attack_direction "vertical")
+
+let test_place_ship _ =
+  let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+
+  assert_equal true @@ place_ship arr 15 17;
+  assert_equal Ship @@ arr.(1).(5);
+  assert_equal Ship @@ arr.(1).(6);
+  assert_equal Ship @@ arr.(1).(7);
+  assert_equal true @@ place_ship arr 28 58;
+  assert_equal Ship @@ arr.(2).(8);
+  assert_equal Ship @@ arr.(3).(8);
+  assert_equal Ship @@ arr.(4).(8);
+  assert_equal Ship @@ arr.(5).(8)
 
 let game_tests =
   "Game"
@@ -121,6 +132,7 @@ let game_tests =
          "is_game_over" >:: test_is_game_over;
          "cpu_attack" >:: test_cpu_attack;
          "attack" >:: test_attack;
+         "place_ship" >:: test_place_ship;
        ]
 
 let series = "Battleship Tests" >::: [ board_tests; game_tests ]

@@ -11,14 +11,14 @@ let rec check_above_below (board : Board.t) (row : int) (col1 : int)
     (col2 : int) : bool =
   if col1 > col2 then true
   else if col1 > 0 && equal_status board.(row).(col1 - 1) Ship then false
-  else if col1 < 9 && equal_status board.(row).(col1 + 1) Ship then false
+  else if col1 <  Array.length board - 1 && equal_status board.(row).(col1 + 1) Ship then false
   else check_above_below board row (col1 + 1) col2
 
 let rec check_left_right (board : Board.t) (row1 : int) (row2 : int) (col : int)
     : bool =
   if row1 > row2 then true
   else if row1 > 0 && equal_status board.(row1 - 1).(col) Ship then false
-  else if row1 < 9 && equal_status board.(row1 + 1).(col) Ship then false
+  else if row1 <  Array.length board - 1 && equal_status board.(row1 + 1).(col) Ship then false
   else check_left_right board (row1 + 1) row2 col
 
 let place_ship (board : Board.t) (click1 : int) (click2 : int) : bool =
@@ -284,15 +284,3 @@ let cpu_attack (board : Board.t) : bool =
     let attack_col = snd attack_target in
 
     attack_given_coords board attack_row attack_col
-
-(*
-0 0 m 0   
-0 0 x 0
-0 q x q
-0 0 q 0
-
-vert = [(3,2)]
-horz = [(2,1), (2,3)]
-
-
-*)
