@@ -126,8 +126,19 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size reque
         <form action=<%s submit_endpoint %> method="get">
   
     <input type="submit" 
-         value="Ready"  />
+         value="Ready!"  />
   </form>
+
+  <form action="/reset_board" method="post">
+      
+    <button type="submit" name="reset"
+         value=<%s turn %>>
+      Reset board
+      </button>
+  <%s! Dream.csrf_tag request %>
+         
+  </form>
+
 
   <script src= "static/placement.js">
   

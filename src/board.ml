@@ -21,3 +21,8 @@ let initialize_boards : t * t =
     Array.make_matrix ~dimx:10 ~dimy:10 Empty )
 
 let convert_position (pos : int) : int * int = (pos / 10, pos mod 10)
+
+
+let reset (board:t): unit = 
+  Array.iter board ~f:(fun row -> Array.fill row ~pos:0 ~len:10 Empty)
+  

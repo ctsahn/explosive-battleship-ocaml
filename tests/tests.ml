@@ -26,6 +26,13 @@ let test_convert_position _ =
   assert_equal (0, 1) @@ convert_position 1;
   assert_equal (9, 2) @@ convert_position 92
 
+let test_reset _ = 
+  let sample_array =
+    let arr = Array.make_matrix ~dimx:10 ~dimy:10 Ship in
+    arr in 
+  reset sample_array;
+  assert_equal (Array.make_matrix ~dimx:10 ~dimy:10 Empty) @@ sample_array
+
 let board_tests =
   "Board"
   >: test_list
@@ -33,6 +40,7 @@ let board_tests =
          "board to string" >:: test_board_to_string;
          "initialize board" >:: test_initialize_board;
          "convert position" >:: test_convert_position;
+         "reset" >:: test_reset
        ]
 
 let vertical_ship_sunk =

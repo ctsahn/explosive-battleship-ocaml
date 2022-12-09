@@ -17,3 +17,5 @@ val initialize_boards : t * t
     Convert the single integer position from the server to x, y coordinates (row, col) for a 2D array.
 *)
 val convert_position : int -> int * int
+
+val reset: t -> unit

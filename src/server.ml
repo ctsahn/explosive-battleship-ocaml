@@ -31,6 +31,25 @@ let handle_ship_placement (turn : string) (player_board : Board.t)
        ~placed_ship_size:(Int.to_string (!click2 - !click1 + 1))
        request)
 
+let handle_reset (turn : string) request =
+  ship_placed := false;
+  click1 := 0;
+  click2 := 0;
+  if String.( = ) turn "player1" || String.( = ) turn "user" then (
+    Board.reset player1_board;
+    player1_ship_status := "";
+    Dream.html
+      (Template.ship_placement ~turn
+         ~user_board_status:(Board.board_to_string player1_board)
+         ~ship_status:!player1_ship_status ~placed_ship_size:"0" request))
+  else (
+    Board.reset player2_board;
+    player2_ship_status := "";
+    Dream.html
+      (Template.ship_placement ~turn
+         ~user_board_status:(Board.board_to_string player2_board)
+         ~ship_status:!player2_ship_status ~placed_ship_size:"0" request))
+
 (* For 2-player turns *)
 let handle_player_turn (user_move : string) (opponent_board : Board.t)
     (turn : string) request =
@@ -200,5 +219,9 @@ let () =
          Dream.get "/cpu_turn" (fun request ->
              Core_unix.sleep 1;
              cpu_turn request);
+         Dream.post "/reset_board" (fun request ->
+             match%lwt Dream.form request with
+             | `Ok [ ("reset", message) ] -> handle_reset message request
+             | _ -> Dream.empty `Bad_Request);
          Dream.get "/static/**" (Dream.static "./static");
        ]
