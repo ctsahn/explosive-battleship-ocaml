@@ -80,21 +80,57 @@ let rec check_vertical_sunk (board : Board.t) (row : int) (col : int)
   then Some (row - dir)
   else check_vertical_sunk board (row + dir) col dir
 
+(* Create a radius of "Miss" squares when we sink a ship, as we know ships cannot touch each other *)
+let create_sink_radius (board : Board.t) (row : int) (col : int) : unit =
+  (* Fill all 8 squares around a square *)
+  if col - 1 >= 0 && equal_status board.(row).(col - 1) Empty then
+    board.(row).(col - 1) <- Miss;
+  if
+    row - 1 >= 0 && col - 1 >= 0 && equal_status board.(row - 1).(col - 1) Empty
+  then board.(row - 1).(col - 1) <- Miss;
+  if
+    row + 1 < Array.length board
+    && col - 1 >= 0
+    && equal_status board.(row + 1).(col - 1) Empty
+  then board.(row + 1).(col - 1) <- Miss;
+  if col + 1 < Array.length board && equal_status board.(row).(col + 1) Empty
+  then board.(row).(col + 1) <- Miss;
+  if
+    row - 1 >= 0
+    && col + 1 < Array.length board
+    && equal_status board.(row - 1).(col + 1) Empty
+  then board.(row - 1).(col + 1) <- Miss;
+  if
+    row + 1 < Array.length board
+    && col + 1 < Array.length board
+    && equal_status board.(row + 1).(col + 1) Empty
+  then board.(row + 1).(col + 1) <- Miss;
+  if row + 1 < Array.length board && equal_status board.(row + 1).(col) Empty
+  then board.(row + 1).(col) <- Miss;
+  if row - 1 >= 0 && equal_status board.(row - 1).(col) Empty then
+    board.(row - 1).(col) <- Miss
+
 let rec sink_horizontal_ship (board : Board.t) (s : int) (e : int) (row : int) :
     bool =
   (* Change the status of the horizontal ship to ShipSunken *)
   if s > e then true
-  else
-    let _ = board.(row).(s) <- ShipSunken in
-    sink_horizontal_ship board (s + 1) e row
+  else (
+    board.(row).(s) <- ShipSunken;
+
+    create_sink_radius board row s;
+
+    sink_horizontal_ship board (s + 1) e row)
 
 let rec sink_vertical_ship (board : Board.t) (s : int) (e : int) (col : int) :
     bool =
   (* Change the status of the vertical ship to ShipSunken. *)
   if s > e then true
-  else
-    let _ = board.(s).(col) <- ShipSunken in
-    sink_vertical_ship board (s + 1) e col
+  else (
+    board.(s).(col) <- ShipSunken;
+
+    create_sink_radius board s col;
+
+    sink_vertical_ship board (s + 1) e col)
 
 let has_sunk (board : Board.t) (row : int) (col : int) : bool =
   (* Check if ship is horizontal *)
