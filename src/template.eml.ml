@@ -1,5 +1,3 @@
-(* ~message is status of opponent's board *)
-
 let start_screen = 
       <html>
       <head>
@@ -27,7 +25,7 @@ let start_screen =
       </body>
       </html>
 
-let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size request= 
+let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~ready request= 
   <html>
   <head>
   <link rel="stylesheet" href="static/style.css">
@@ -41,7 +39,7 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size reque
 %         if row = 0 then 
 %          (Int.to_string col)
 %         else (Int.to_string row)^(Int.to_string col) in 
-        <td class="light" id=<%s "usercell"^cell_num %>  onclick=<%s "handleShipPlacement('usercell" ^cell_num^ "','userform"^cell_num^"')" %> >
+        <td class="light" id=<%s "usercell"^cell_num %>  onclick=<%s "handleShipPlacement('usercell" ^cell_num^ "','userform"^cell_num^ "'," ^ ready ^")" %> >
 
 %       let placement_endpoint =
 %           if turn = "player1" then "/player1_placement"
@@ -123,18 +121,18 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size reque
 %           else if turn = "player2" then "/play_two_player"
 %           else "/play_single_player" in 
 
-        <form action=<%s submit_endpoint %> method="get">
-  
-    <input type="submit" 
-         value="Ready!"  />
-  </form>
+      <form action=<%s submit_endpoint %> method="get">
+%     if (ready = "true") then begin
+      <input type="submit" value="Ready!" />
+%     end
+%     else begin 
+      <input type="submit" value="Ready!"  disabled/>
+%     end;
+      </form>
 
   <form action="/reset_board" method="post">
       
-    <button type="submit" name="reset"
-         value=<%s turn %>>
-      Reset board
-      </button>
+    <button type="submit" name="reset" value=<%s turn %>> Reset board </button>
   <%s! Dream.csrf_tag request %>
          
   </form>
@@ -399,7 +397,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_ov
 
       </tbody>
 </table>
-<h2>Player 2's board</h2>
+<h2>CPU's board</h2>
 <div id="cpu-board-status" style="display: none;"><%s cpu_board_status %></div>
 <table class="board">
 <tbody>

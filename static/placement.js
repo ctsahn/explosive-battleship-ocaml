@@ -1,13 +1,17 @@
 
-async function handleShipPlacement(cellid, formid) {
+async function handleShipPlacement(cellid, formid, ready) {
+
+    if (!ready){
 
     document.getElementById(cellid).style.backgroundColor = "purple";
     document.getElementById(formid).submit();
+
+    }
 }
 
 function loadColors() {
     let userBoardStatus = document.getElementById("user-board-status").innerHTML;
-    
+
     for (let i = 0; i < 100; i++) {
         if (userBoardStatus[i] == 2) {
             document.getElementById("usercell" + i).style.backgroundColor = "purple";

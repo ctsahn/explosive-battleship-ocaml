@@ -24,12 +24,25 @@ let handle_ship_placement (turn : string) (player_board : Board.t)
     click1 := Int.of_string user_move;
     ship_placed := true);
 
-  Dream.html
-    (Template.ship_placement ~turn
-       ~user_board_status:(Board.board_to_string player_board)
-       ~ship_status:!player_ship_status
-       ~placed_ship_size:(Int.to_string (!click2 - !click1 + 1))
-       request)
+  let sorted_ship_sizes =
+    List.sort (String.to_list !player_ship_status) ~compare:Char.compare
+  in
+  let expected_ship_sizes = [ '2'; '3'; '4'; '5' ] in
+
+  if List.equal Char.equal sorted_ship_sizes expected_ship_sizes then
+    Dream.html
+      (Template.ship_placement ~turn
+         ~user_board_status:(Board.board_to_string player_board)
+         ~ship_status:!player_ship_status
+         ~placed_ship_size:(Int.to_string (!click2 - !click1 + 1))
+         ~ready:"true" request)
+  else
+    Dream.html
+      (Template.ship_placement ~turn
+         ~user_board_status:(Board.board_to_string player_board)
+         ~ship_status:!player_ship_status
+         ~placed_ship_size:(Int.to_string (!click2 - !click1 + 1))
+         ~ready:"false" request)
 
 let handle_reset (turn : string) request =
   ship_placed := false;
@@ -41,14 +54,14 @@ let handle_reset (turn : string) request =
     Dream.html
       (Template.ship_placement ~turn
          ~user_board_status:(Board.board_to_string player1_board)
-         ~ship_status:!player1_ship_status ~placed_ship_size:"0" request))
+         ~ship_status:!player1_ship_status ~placed_ship_size:"0" ~ready:"false" request))
   else (
     Board.reset player2_board;
     player2_ship_status := "";
     Dream.html
       (Template.ship_placement ~turn
          ~user_board_status:(Board.board_to_string player2_board)
-         ~ship_status:!player2_ship_status ~placed_ship_size:"0" request))
+         ~ship_status:!player2_ship_status ~placed_ship_size:"0" ~ready:"false" request))
 
 (* For 2-player turns *)
 let handle_player_turn (user_move : string) (opponent_board : Board.t)
@@ -141,7 +154,7 @@ let () =
              Dream.html
                (Template.ship_placement ~turn:"user"
                   ~user_board_status:(Board.board_to_string player1_board)
-                  ~ship_status:!player1_ship_status ~placed_ship_size:"0"
+                  ~ship_status:!player1_ship_status ~placed_ship_size:"0" ~ready:"false"
                   request));
          (* send position of one click for ship placement *)
          Dream.post "/placement" (fun request ->
@@ -155,7 +168,7 @@ let () =
              Dream.html
                (Template.ship_placement ~turn:"player1"
                   ~user_board_status:(Board.board_to_string player1_board)
-                  ~ship_status:!player1_ship_status ~placed_ship_size:"0"
+                  ~ship_status:!player1_ship_status ~placed_ship_size:"0" ~ready:"false"
                   request));
          (* send info of one square for placement *)
          Dream.post "/player1_placement" (fun request ->
@@ -169,7 +182,7 @@ let () =
              Dream.html
                (Template.ship_placement ~turn:"player2"
                   ~user_board_status:(Board.board_to_string player2_board)
-                  ~ship_status:!player2_ship_status ~placed_ship_size:"0"
+                  ~ship_status:!player2_ship_status ~placed_ship_size:"0" ~ready:"false"
                   request));
          (* send info of one square for placement *)
          Dream.post "/player2_placement" (fun request ->
