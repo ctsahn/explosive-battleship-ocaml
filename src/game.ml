@@ -12,21 +12,54 @@ let cpu_vert_queue = Queue.create ()
 (* The direction the CPU is smartly attacking. "horizontal" or "vertical" after a hit, or "" when no specified direction of attack *)
 let cpu_attack_direction = ref ""
 
+(* Create a radius of "Miss" squares when we sink a ship, as we know ships cannot touch each other *)
+let create_sink_radius (board : Board.t) (row : int) (col : int) : unit =
+  (* Fill all 8 squares around a square *)
+  if col - 1 >= 0 && equal_status board.(row).(col - 1) Empty then
+    board.(row).(col - 1) <- Miss;
+  if
+    row - 1 >= 0 && col - 1 >= 0 && equal_status board.(row - 1).(col - 1) Empty
+  then board.(row - 1).(col - 1) <- Miss;
+  if
+    row + 1 < Array.length board
+    && col - 1 >= 0
+    && equal_status board.(row + 1).(col - 1) Empty
+  then board.(row + 1).(col - 1) <- Miss;
+  if col + 1 < Array.length board && equal_status board.(row).(col + 1) Empty
+  then board.(row).(col + 1) <- Miss;
+  if
+    row - 1 >= 0
+    && col + 1 < Array.length board
+    && equal_status board.(row - 1).(col + 1) Empty
+  then board.(row - 1).(col + 1) <- Miss;
+  if
+    row + 1 < Array.length board
+    && col + 1 < Array.length board
+    && equal_status board.(row + 1).(col + 1) Empty
+  then board.(row + 1).(col + 1) <- Miss;
+  if row + 1 < Array.length board && equal_status board.(row + 1).(col) Empty
+  then board.(row + 1).(col) <- Miss;
+  if row - 1 >= 0 && equal_status board.(row - 1).(col) Empty then
+    board.(row - 1).(col) <- Miss
+
 let rec check_left_right (board : Board.t) (row : int) (col1 : int)
     (col2 : int) : bool =
   (* Check horizontally if there already is a ship placed where the new ship will go. *)
   if col1 > col2 then true
-  else if equal_status board.(row).(col1) Ship then false
+  else if equal_status board.(row).(col1) Ship then false (* overlapping other ship *)
+  else if equal_status board.(row).(col1) Miss then false (* too close to other ships *)
   else check_left_right board row (col1 + 1) col2
 
 let rec check_above_below (board : Board.t) (row1 : int) (row2 : int) (col : int)
     : bool =
   (* Check vertically if there already is a ship placed where the new ship will go. *)
   if row1 > row2 then true
-  else if equal_status board.(row1).(col) Ship then false
+  else if equal_status board.(row1).(col) Ship then false (* overlapping other ship *)
+  else if equal_status board.(row1).(col) Miss then false (* too close to other ships *)
   else check_above_below board (row1 + 1) row2 col
 
 let get_row_col (click1:int) (click2:int) : int * int * int * int = 
+  (* Get the rows and columns of the start and end clicks *)
   let row1 = fst (Board.convert_position click1) in
   let col1 = snd (Board.convert_position click1) in
   let row2 = fst (Board.convert_position click2) in
@@ -47,6 +80,11 @@ let place_ship (board:Board.t) (click1:int) (click2:int): int option =
     if not (check_left_right board row1 col1 col2) then None
     else
       let _ = Array.fill (board.(row1)) ~pos:col1 ~len: (col2 - col1 + 1) Ship in 
+      let _ = 
+        for i = col1 to col2 do 
+          create_sink_radius board row1 i
+        done
+      in
       Some (col2 - col1 + 1)
   else 
     (* Place the vertical ship *)
@@ -54,10 +92,19 @@ let place_ship (board:Board.t) (click1:int) (click2:int): int option =
     else
       let _ = 
         for i = row1 to row2 do 
-          Array.fill (board.(i)) ~pos:col1 ~len:1 Ship
+          Array.fill (board.(i)) ~pos:col1 ~len:1 Ship;
+          create_sink_radius board i col1
         done 
       in
       Some (row2 - row1 + 1)
+
+let cleanse_board (board: Board.t) : unit = 
+  (* Only keep ships on the board, everything else Empty *)
+  for r = 0 to (Array.length board) - 1 do 
+    for c = 0 to (Array.length (board.(r))) - 1 do 
+      if not (equal_status board.(r).(c) Ship) then board.(r).(c) <- Empty
+    done
+  done
 
 let is_game_over (board : Board.t) : bool =
   (* Check if unsunken ships still exist *)

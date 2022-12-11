@@ -145,11 +145,11 @@ let test_place_ship _ =
   assert_equal Ship @@ arr.(1).(5);
   assert_equal Ship @@ arr.(1).(6);
   assert_equal Ship @@ arr.(1).(7);
-  assert_equal (Some 4) @@ place_ship arr 28 58;
-  assert_equal Ship @@ arr.(2).(8);
-  assert_equal Ship @@ arr.(3).(8);
-  assert_equal Ship @@ arr.(4).(8);
-  assert_equal Ship @@ arr.(5).(8)
+  assert_equal (Some 4) @@ place_ship arr 29 59;
+  assert_equal Ship @@ arr.(2).(9);
+  assert_equal Ship @@ arr.(3).(9);
+  assert_equal Ship @@ arr.(4).(9);
+  assert_equal Ship @@ arr.(5).(9)
 
 let test_is_valid_attack _ = 
   let miss_arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in

@@ -328,6 +328,8 @@ let () =
              | _ -> Dream.empty `Bad_Request);
          (* play game - 2-player *)
          Dream.get "/play_two_player" (fun request ->
+            Game.cleanse_board(player1_board);
+            Game.cleanse_board(player2_board);
              current_turn := "player1";
              Dream.html
                (Template.two_player_game_board
@@ -351,6 +353,8 @@ let () =
              | _ -> Dream.empty `Bad_Request);
          (* play game - single player *)
          Dream.get "/play_single_player" (fun request ->
+            Game.cleanse_board(player1_board);
+            Game.cleanse_board(player2_board);
              current_turn := "user";
              Dream.html
                (Template.single_player_game_board
