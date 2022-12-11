@@ -21,9 +21,10 @@ let handle_ship_placement (player_board : Board.t)
     click2 := Int.of_string user_move;
     ship_placed:=false;
     match Game.place_ship player_board !click1 !click2 with 
-    | Some v -> ship_size := Int.to_string v;
+    | Some v -> 
+      ship_size := Int.to_string v;
+      player_ship_status := (!player_ship_status) ^ ship_size.contents;
     | None -> ship_size := Int.to_string (-1);
-    player_ship_status := (!player_ship_status) ^ ship_size.contents;
   )
   else (
     click1 := Int.of_string user_move;
