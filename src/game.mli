@@ -24,6 +24,11 @@ val is_game_over : Board.t -> bool
 val has_sunk : Board.t -> int -> int -> bool
 
 (*
+    Check if a hit resulted in the sinking of the ship. This also updates the ship status to ShipSunken when appropriate.
+*)
+val has_sunk : Board.t -> int -> int -> bool
+
+(*
     Given the board to attack and previous hits, the computer chooses a valid position on the 
     opponent's board depending on its previous successful hits. 
 
@@ -31,17 +36,17 @@ val has_sunk : Board.t -> int -> int -> bool
 *)
 val cpu_attack : Board.t -> bool
 
+(* 
+    Check whether a position in the board is able to be attacked (not previously attacked, not out of bounds, etc).
+*)
+val is_valid_attack: Board.t -> int -> int -> bool
+
+
 (*
 (*
     Randomly place CPU ships on a board.
 *)
 val place_cpu_ships: Board.t
-
-(* 
-    Check whether the position in the board is valid. 
-    ie. player does not choose a previously chosen position.
-*)
-val is_valid_attack : int -> bool
 
 
 

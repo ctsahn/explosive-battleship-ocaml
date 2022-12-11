@@ -1,4 +1,4 @@
-(* open Core
+open Core
 open OUnit2
 open Board
 open Game
@@ -15,6 +15,24 @@ let test_board_to_string _ =
   assert_equal "4444"
   @@ board_to_string (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken)
 
+
+let test_populate_board _ = 
+
+  let empty_arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in 
+  populate_board empty_arr "111111111";
+  assert_equal (Array.make_matrix ~dimx:3 ~dimy:3 Miss) @@ empty_arr;
+
+  let result_arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
+  result_arr.(0).(0) <- ShipHit;
+  result_arr.(0).(1) <- ShipSunken;
+  result_arr.(0).(2) <- Miss;  
+  result_arr.(1).(0) <- Ship;
+
+  let empty_arr_2 = Array.make_matrix ~dimx:3 ~dimy:3 Empty in 
+  
+  populate_board empty_arr_2 "341200000";
+  assert_equal result_arr @@ empty_arr_2 
+
 let test_initialize_board _ =
   assert_equal
     ( Array.make_matrix ~dimx:10 ~dimy:10 Empty,
@@ -26,13 +44,22 @@ let test_convert_position _ =
   assert_equal (0, 1) @@ convert_position 1;
   assert_equal (9, 2) @@ convert_position 92
 
+let test_reset _ = 
+  let sample_array =
+    let arr = Array.make_matrix ~dimx:10 ~dimy:10 Ship in
+    arr in 
+  reset sample_array;
+  assert_equal (Array.make_matrix ~dimx:10 ~dimy:10 Empty) @@ sample_array
+
 let board_tests =
   "Board"
   >: test_list
        [
          "board to string" >:: test_board_to_string;
+         "populate_board" >:: test_populate_board;
          "initialize board" >:: test_initialize_board;
          "convert position" >:: test_convert_position;
+         "reset" >:: test_reset
        ]
 
 let vertical_ship_sunk =
@@ -124,6 +151,12 @@ let test_place_ship _ =
   assert_equal Ship @@ arr.(4).(8);
   assert_equal Ship @@ arr.(5).(8)
 
+let test_is_valid_attack _ = 
+  let miss_arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in
+  
+  assert_equal false @@ is_valid_attack miss_arr 1 1; 
+  assert_equal true @@ is_valid_attack empty_array 1 1
+
 let game_tests =
   "Game"
   >: test_list
@@ -133,7 +166,8 @@ let game_tests =
          "cpu_attack" >:: test_cpu_attack;
          "attack" >:: test_attack;
          "place_ship" >:: test_place_ship;
+         "is_valid_attack" >:: test_is_valid_attack;
        ]
 
 let series = "Battleship Tests" >::: [ board_tests; game_tests ]
-let () = run_test_tt_main series *)
+let () = run_test_tt_main series

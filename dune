@@ -1,0 +1,22 @@
+(rule
+  (target battleship.zip)
+  (deps 
+    src/board.ml
+    src/board.mli
+    src/dune
+    src/game.ml
+    src/game.mli
+    src/server.ml
+    src/template.eml.ml
+    static/placement.js
+    static/single-player.js
+    static/style.css
+    static/two-player.js
+    tests/dune
+    tests/tests.ml
+    dune
+    dune-project
+  )
+
+  (action
+    (run zip -R battleship.zip %{deps})))
