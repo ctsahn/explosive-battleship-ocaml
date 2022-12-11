@@ -141,11 +141,11 @@ let test_cpu_attack _ =
 let test_place_ship _ =
   let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
 
-  assert_equal true @@ place_ship arr 15 17;
+  assert_equal (Some 3) @@ place_ship arr 15 17;
   assert_equal Ship @@ arr.(1).(5);
   assert_equal Ship @@ arr.(1).(6);
   assert_equal Ship @@ arr.(1).(7);
-  assert_equal true @@ place_ship arr 28 58;
+  assert_equal (Some 4) @@ place_ship arr 28 58;
   assert_equal Ship @@ arr.(2).(8);
   assert_equal Ship @@ arr.(3).(8);
   assert_equal Ship @@ arr.(4).(8);

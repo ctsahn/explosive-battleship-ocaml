@@ -21,7 +21,7 @@ val attack : Board.t -> int -> bool
     Check if a player has sunk all of the opponent's ships. 
 *)
 val is_game_over : Board.t -> bool
-val has_sunk : Board.t -> int -> int -> bool
+(* val has_sunk : Board.t -> int -> int -> bool *)
 
 (*
     Check if a hit resulted in the sinking of the ship. This also updates the ship status to ShipSunken when appropriate.
