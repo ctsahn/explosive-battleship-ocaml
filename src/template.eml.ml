@@ -15,7 +15,7 @@ let start_screen =
       <input type="submit" 
             value="New user vs. user game"  />
       </form>
-      <form action="/placement" method="get">
+      <form action="/load" method="get">
       <input type="submit" 
             value="Load existing game from file"  />
       </form>
@@ -130,10 +130,10 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
 %     end;
       </form>
 
-  <form action="/reset_board" method="post">
+  <form action="/reset_board" method="get">
       
-    <button type="submit" name="reset" value=<%s turn %>> Reset board </button>
-  <%s! Dream.csrf_tag request %>
+    <button type="submit"> Reset board </button>
+
          
   </form>
 
@@ -287,6 +287,20 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~gam
 
   </tbody>
   </table>
+
+  <form action="/save" method="get">
+      
+
+%     if (game_over = "true") then begin
+            <button type="submit" disabled > Save game </button>
+%     end
+%     else begin 
+            <button type="submit"> Save game </button>
+%     end;
+
+
+         
+  </form>
 
 
   <script src= "static/two-player.js">
@@ -443,6 +457,13 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_ov
 
 </tbody>
 </table>
+
+<form action="/save" method="get">
+      
+<button type="submit"> Save game </button>
+
+     
+</form>
 
 
 <script src= "static/single-player.js">

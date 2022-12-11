@@ -8,6 +8,9 @@ type t = status array array
 *)
 val board_to_string : t -> string
 
+
+val populate_board : t -> string -> unit
+
 (*
      Create two 10x10 arrays of "Empty" squares for each player
 *)

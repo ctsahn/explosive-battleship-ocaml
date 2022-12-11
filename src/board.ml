@@ -16,6 +16,29 @@ let board_to_string (board : t) : string =
   in
   String.concat ~sep:"" converted
 
+let populate_board (board:t) (input_str:string):unit = 
+
+  let board_len = Array.length board in 
+
+  Array.iteri board ~f: (fun i _ -> 
+    
+    let num_list = String.subo ~pos: (i * board_len) ~len:board_len  input_str |> String.to_list in 
+    
+    List.iteri num_list ~f: (fun j el ->
+
+      match el with 
+      | '0' -> board.(i).(j) <- Empty
+      | '1' -> board.(i).(j) <- Miss
+      | '2' -> board.(i).(j) <- Ship
+      | '3' -> board.(i).(j) <- ShipHit
+      | '4' -> board.(i).(j) <- ShipSunken
+      | _ -> failwith ("None")
+
+      )
+
+    )
+
+
 let initialize_boards : t * t =
   ( Array.make_matrix ~dimx:10 ~dimy:10 Empty,
     Array.make_matrix ~dimx:10 ~dimy:10 Empty )

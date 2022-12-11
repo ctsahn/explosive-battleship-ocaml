@@ -15,6 +15,28 @@ let test_board_to_string _ =
   assert_equal "4444"
   @@ board_to_string (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken)
 
+
+let test_populate_board _ = 
+
+  let empty_arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in 
+  populate_board empty_arr "111111111";
+  assert_equal (Array.make_matrix ~dimx:3 ~dimy:3 Miss) @@ empty_arr;
+
+  let result_arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
+  result_arr.(0).(0) <- ShipHit;
+  result_arr.(0).(1) <- ShipSunken;
+  result_arr.(0).(2) <- Miss;  
+  result_arr.(1).(0) <- Ship;
+
+  let empty_arr_2 = Array.make_matrix ~dimx:3 ~dimy:3 Empty in 
+  
+  populate_board empty_arr_2 "341200000";
+  assert_equal result_arr @@ empty_arr_2 
+
+  
+
+
+
 let test_initialize_board _ =
   assert_equal
     ( Array.make_matrix ~dimx:10 ~dimy:10 Empty,
@@ -38,6 +60,7 @@ let board_tests =
   >: test_list
        [
          "board to string" >:: test_board_to_string;
+         "populate_board" >:: test_populate_board;
          "initialize board" >:: test_initialize_board;
          "convert position" >:: test_convert_position;
          "reset" >:: test_reset

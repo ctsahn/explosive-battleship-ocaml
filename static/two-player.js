@@ -1,4 +1,5 @@
 let disable = false; //disable multiple clicks
+let showSaveText = false;
 async function handleClick(cellid, formid, currentTurn,gameOver) {
 
   // only allow clicks when it is your turn, and make sure a form exists in order for click to occur
@@ -12,10 +13,18 @@ async function handleClick(cellid, formid, currentTurn,gameOver) {
 
 
 
+
 function loadColors() {
 
   let player1BoardStatus = document.getElementById("player1-board-status").innerHTML;
   let player2BoardStatus = document.getElementById("player2-board-status").innerHTML;
+
+
+
+  if(showSaveText){
+    document.getElementById("save-status").innerHTML = "Game saved to save.txt!";
+    showSaveText = false;
+  }
   for (let i = 0; i < 100; i++) {
 
     // miss
