@@ -1,24 +1,27 @@
-(* 
-    Given the positions for the starting and ending 
-    positions of the ship, place the ship on the player's board. 
+val cpu_horz_queue : (int * int) Core.Queue.t
+val cpu_vert_queue : (int * int) Core.Queue.t
+val cpu_attack_direction : string ref
 
-    Return length of ship if placement is possible, -1 otherwise. 
+(*
+     Given the length of the ship and the positions for the starting and ending
+     positions of the ship, place the ship on the player's board.
+
+     Return true if placement is possible, false otherwise.
 *)
-val place_ship : Board.t -> int -> int -> int
+val place_ship : Board.t -> int -> int -> int option
 
-(* 
-    Given the position and board to attack, decide whether the player hit a ship or missed. 
+(*
+     Given the position and board to attack, decide whether the player hit a ship or missed.
 
-    Return true if a ship was hit, false otherwise.
+     Return true if a ship was hit, false otherwise.
 *)
 val attack : Board.t -> int -> bool
-
 
 (*
     Check if a player has sunk all of the opponent's ships. 
 *)
 val is_game_over : Board.t -> bool
-
+val has_sunk : Board.t -> int -> int -> bool
 
 (*
     Given the board to attack and previous hits, the computer chooses a valid position on the 
@@ -26,9 +29,7 @@ val is_game_over : Board.t -> bool
 
     Return true if a ship was hit, false otherwise.
 *)
-val cpu_attack : Board.t  -> bool
-
-val has_sunk : Board.t -> int -> int -> bool 
+val cpu_attack : Board.t -> bool
 
 (*
 (*
@@ -41,9 +42,6 @@ val place_cpu_ships: Board.t
     ie. player does not choose a previously chosen position.
 *)
 val is_valid_attack : int -> bool
-
-
-
 
 
 
