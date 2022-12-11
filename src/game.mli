@@ -8,7 +8,7 @@ val cpu_attack_direction : string ref
 
      Return true if placement is possible, false otherwise.
 *)
-val place_ship : Board.t -> int -> int -> bool
+val place_ship : Board.t -> int -> int -> int option
 
 (*
      Given the position and board to attack, decide whether the player hit a ship or missed.
@@ -21,7 +21,7 @@ val attack : Board.t -> int -> bool
     Check if a player has sunk all of the opponent's ships. 
 *)
 val is_game_over : Board.t -> bool
-
+val has_sunk : Board.t -> int -> int -> bool
 
 (*
     Check if a hit resulted in the sinking of the ship. This also updates the ship status to ShipSunken when appropriate.
@@ -47,7 +47,6 @@ val is_valid_attack: Board.t -> int -> int -> bool
     Randomly place CPU ships on a board.
 *)
 val place_cpu_ships: Board.t
-
 
 
 

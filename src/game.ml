@@ -12,47 +12,52 @@ let cpu_vert_queue = Queue.create ()
 (* The direction the CPU is smartly attacking. "horizontal" or "vertical" after a hit, or "" when no specified direction of attack *)
 let cpu_attack_direction = ref ""
 
-let rec check_above_below (board : Board.t) (row : int) (col1 : int)
+let rec check_left_right (board : Board.t) (row : int) (col1 : int)
     (col2 : int) : bool =
-  (* Check vertically if there already is a ship placed where the new ship will go. *)
-  if col1 > col2 then true
-  else if col1 > 0 && equal_status board.(row).(col1 - 1) Ship then false
-  else if
-    col1 < Array.length board - 1 && equal_status board.(row).(col1 + 1) Ship
-  then false
-  else check_above_below board row (col1 + 1) col2
-
-let rec check_left_right (board : Board.t) (row1 : int) (row2 : int) (col : int)
-    : bool =
   (* Check horizontally if there already is a ship placed where the new ship will go. *)
-  if row1 > row2 then true
-  else if row1 > 0 && equal_status board.(row1 - 1).(col) Ship then false
-  else if
-    row1 < Array.length board - 1 && equal_status board.(row1 + 1).(col) Ship
-  then false
-  else check_left_right board (row1 + 1) row2 col
+  if col1 > col2 then true
+  else if equal_status board.(row).(col1) Ship then false
+  else check_left_right board row (col1 + 1) col2
 
-let place_ship (board : Board.t) (click1 : int) (click2 : int) : bool =
+let rec check_above_below (board : Board.t) (row1 : int) (row2 : int) (col : int)
+    : bool =
+  (* Check vertically if there already is a ship placed where the new ship will go. *)
+  if row1 > row2 then true
+  else if equal_status board.(row1).(col) Ship then false
+  else check_above_below board (row1 + 1) row2 col
+
+let get_row_col (click1:int) (click2:int) : int * int * int * int = 
   let row1 = fst (Board.convert_position click1) in
   let col1 = snd (Board.convert_position click1) in
   let row2 = fst (Board.convert_position click2) in
   let col2 = snd (Board.convert_position click2) in
 
-  if row1 <> row2 && col1 <> col2 then false
-  else if not (check_above_below board row1 col1 col2) then false
-  else if not (check_left_right board row1 row2 col1) then false
-  else if row1 = row2 then
+  if row1 < row2 then 
+    if col1 < col2 then (row1, row2, col1, col2)
+    else (row1, row2, col2, col1)
+  else 
+    if col1 < col2 then (row2, row1, col1, col2)
+    else (row2, row1, col2, col1)
+
+let place_ship (board:Board.t) (click1:int) (click2:int): int option = 
+  let (row1, row2, col1, col2) = get_row_col click1 click2 in
+  if ((row1 <> row2) && (col1 <> col2)) then None 
+  else if (row1 = row2) then 
     (* Place the horizontal ship *)
-    let _ = Array.fill board.(row1) ~pos:col1 ~len:(col2 - col1 + 1) Ship in
-    true
-  else
+    if not (check_left_right board row1 col1 col2) then None
+    else
+      let _ = Array.fill (board.(row1)) ~pos:col1 ~len: (col2 - col1 + 1) Ship in 
+      Some (col2 - col1 + 1)
+  else 
     (* Place the vertical ship *)
-    let _ =
-      for i = row1 to row2 do
-        Array.fill board.(i) ~pos:col1 ~len:1 Ship
-      done
-    in
-    true
+    if not (check_above_below board row1 row2 col1) then None
+    else
+      let _ = 
+        for i = row1 to row2 do 
+          Array.fill (board.(i)) ~pos:col1 ~len:1 Ship
+        done 
+      in
+      Some (row2 - row1 + 1)
 
 let is_game_over (board : Board.t) : bool =
   (* Check if unsunken ships still exist *)
@@ -218,7 +223,6 @@ let attack_given_coords (board : Board.t) (attack_row : int) (attack_col : int)
     : bool =
   if Board.equal_status Board.Ship board.(attack_row).(attack_col) then (
     board.(attack_row).(attack_col) <- Board.ShipHit;
-
     (* Clear queues and attack direction after a sink - go back to random search *)
     if has_sunk board attack_row attack_col then (
       Queue.clear cpu_horz_queue;

@@ -13,14 +13,17 @@ let player1_ship_status = ref ""
 let player2_ship_status = ref ""
 (* User placement of ships - which ship lengths have been placed so far *)
 
+let ship_size = ref "-1"
+
 let handle_ship_placement (player_board : Board.t)
     (player_ship_status : string ref) (user_move : string) request =
   if !ship_placed then (
     click2 := Int.of_string user_move;
-    let _ = Game.place_ship player_board !click1 !click2 in
-    ship_placed := false;
-    let ship_size = Int.to_string (!click2 - !click1 + 1) in
-    player_ship_status := !player_ship_status ^ ship_size)
+    ship_placed:=false;
+    match Game.place_ship player_board !click1 !click2 with 
+    | Some v -> ship_size := Int.to_string v;
+    | None -> ship_size := Int.to_string (-1);
+    player_ship_status := (!player_ship_status) ^ ship_size.contents;
   else (
     click1 := Int.of_string user_move;
     ship_placed := true);
@@ -35,14 +38,14 @@ let handle_ship_placement (player_board : Board.t)
       (Template.ship_placement ~turn:!current_turn
          ~user_board_status:(Board.board_to_string player_board)
          ~ship_status:!player_ship_status
-         ~placed_ship_size:(Int.to_string (!click2 - !click1 + 1))
+         ~placed_ship_size:ship_size.contents
          ~ready:"true" request)
   else
     Dream.html
       (Template.ship_placement ~turn:!current_turn
          ~user_board_status:(Board.board_to_string player_board)
          ~ship_status:!player_ship_status
-         ~placed_ship_size:(Int.to_string (!click2 - !click1 + 1))
+         ~placed_ship_size:ship_size.contents
          ~ready:"false" request)
 
 let handle_reset request =
@@ -193,7 +196,6 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t) request =
 
   (* If a ship was hit, true *)
   let ship_hit = Game.attack opponent_board user_move_int in
-
   if ship_hit then
     if Game.is_game_over opponent_board then
       Dream.html

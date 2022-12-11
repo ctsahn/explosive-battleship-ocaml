@@ -33,10 +33,6 @@ let test_populate_board _ =
   populate_board empty_arr_2 "341200000";
   assert_equal result_arr @@ empty_arr_2 
 
-  
-
-
-
 let test_initialize_board _ =
   assert_equal
     ( Array.make_matrix ~dimx:10 ~dimy:10 Empty,
@@ -160,8 +156,6 @@ let test_is_valid_attack _ =
   
   assert_equal false @@ is_valid_attack miss_arr 1 1; 
   assert_equal true @@ is_valid_attack empty_array 1 1
-
-
 
 let game_tests =
   "Game"

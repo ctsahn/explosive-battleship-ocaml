@@ -14,8 +14,7 @@
  (modules server template )
  
  (libraries dream core core_unix board game yojson ppx_deriving_yojson.runtime )
- (preprocess (pps lwt_ppx  ppx_deriving_yojson)))
- 
+ (preprocess (pps lwt_ppx  ppx_deriving_yojson))) 
 
  (rule
  (targets template.ml)

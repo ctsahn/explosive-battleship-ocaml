@@ -8,7 +8,9 @@ type t = status array array
 *)
 val board_to_string : t -> string
 
-
+(*
+     Create a 10x10 array of "Empty" squares
+*)
 val populate_board : t -> string -> unit
 
 (*

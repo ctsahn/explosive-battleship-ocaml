@@ -16,6 +16,7 @@ let board_to_string (board : t) : string =
   in
   String.concat ~sep:"" converted
 
+
 let populate_board (board:t) (input_str:string):unit = 
 
   let board_len = Array.length board in 
@@ -45,7 +46,6 @@ let initialize_boards : t * t =
 
 let convert_position (pos : int) : int * int = (pos / 10, pos mod 10)
 
-
 let reset (board:t): unit = 
   Array.iter board ~f:(fun row -> Array.fill row ~pos:0 ~len:10 Empty)
-  
+
