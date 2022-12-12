@@ -25,7 +25,7 @@ let start_screen =
       </body>
       </html>
 
-let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~ready request= 
+let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~ready ~error request= 
   <html>
   <head>
   <link rel="stylesheet" href="static/style.css">
@@ -54,7 +54,7 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
 %   in 
 
 
-  <body>
+  <body onload="loadColors()">
 
 %     let display_turn = 
 %           if turn = "player1" then "Player 1"
@@ -70,6 +70,10 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
   <h2 id="length4">4<h2>
   <h2 id="length3">3<h2>
   <h2 id="length2">2<h2>
+
+
+
+
   <table class="board">
       <tbody>
       <tr>
@@ -116,6 +120,23 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
   </table>
 
 
+%     if (error = Game.not_straight_error) then begin
+      <p style="color:red">Invalid placement! Placements must be vertical or horizontal.</p>
+%     end
+%     else if (error = Game.touching_error) then begin 
+      <p style="color:red"> Invalid placement! Ships cannot touch. </p>
+%     end
+%     else if (error = Game.repeat_error) then begin 
+      <p style="color:red"> Repeat placement! There can only be one of each ship size.</p>
+%     end
+%     else if (error = Game.too_big_error) then begin 
+      <p style="color:red"> Ship too large! </p>
+%     end
+%     else if (error = Game.too_small_error) then begin 
+      <p style="color:red"> Ship too small! </p>
+%     end;
+
+
 %       let submit_endpoint =
 %           if turn = "player1" then "/player2_placement"
 %           else if turn = "player2" then "/play_two_player"
@@ -136,6 +157,9 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
 
          
   </form>
+
+
+
 
 
   <script src= "static/placement.js">

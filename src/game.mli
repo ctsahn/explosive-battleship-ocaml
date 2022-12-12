@@ -2,13 +2,20 @@ val cpu_horz_queue : (int * int) Core.Queue.t
 val cpu_vert_queue : (int * int) Core.Queue.t
 val cpu_attack_direction : string ref
 
+
+val not_straight_error : string
+val touching_error : string
+val repeat_error : string
+val too_small_error : string
+val too_big_error : string
+
 (*
      Given the length of the ship and the positions for the starting and ending
      positions of the ship, place the ship on the player's board.
 
      Return true if placement is possible, false otherwise.
 *)
-val place_ship : Board.t -> int -> int -> int option
+val place_ship : Board.t -> string -> int -> int -> (int, string) result
 
 (*
      Given the position and board to attack, decide whether the player hit a ship or missed.

@@ -1,10 +1,12 @@
-
+let secondClick = false;
+let startSquare = "usercell55";
+console.log("asgasdg");
 async function handleShipPlacement(cellid, formid, ready) {
 
-    if (!ready){
+    if (document.getElementById(formid) && !ready  ) {
 
-    document.getElementById(cellid).style.backgroundColor = "purple";
-    document.getElementById(formid).submit();
+        document.getElementById(cellid).style.backgroundColor = "purple";
+        document.getElementById(formid).submit();
 
     }
 }
@@ -15,6 +17,11 @@ function loadColors() {
     for (let i = 0; i < 100; i++) {
         if (userBoardStatus[i] == 2) {
             document.getElementById("usercell" + i).style.backgroundColor = "purple";
+            document.getElementById("usercell" + i).innerHTML = "";
+        }
+        if (userBoardStatus[i] == 1) {
+            document.getElementById("usercell" + i).style.backgroundColor = "lightgray";
+            document.getElementById("usercell" + i).innerHTML = "";
         }
     }
 
@@ -22,8 +29,7 @@ function loadColors() {
     let shipStatus = document.getElementById("ship-status").innerHTML;
 
     for (let i = 0; i < shipStatus.length; i++) {
-        console.log(shipStatus.charAt(i));
-        document.getElementById("length" + shipStatus.charAt(i)).style.color = "red";
+        document.getElementById("length" + shipStatus.charAt(i)).style.color = "purple";
     }
 
     // highlight length of current ship you place
@@ -31,9 +37,15 @@ function loadColors() {
 
     // not 0
     if (shipSize > 0) {
-        console.log(shipSize);
-        document.getElementById("length" + shipSize).style.color = "red";
+        document.getElementById("length" + shipSize).style.color = "purple";
     }
 
 }
-loadColors(); // we want to call this every time we load a page
+//loadColors(); // we want to call this every time we load a page
+
+
+
+
+
+
+

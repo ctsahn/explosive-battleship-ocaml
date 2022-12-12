@@ -13,42 +13,52 @@ let player1_ship_status = ref ""
 let player2_ship_status = ref ""
 (* User placement of ships - which ship lengths have been placed so far *)
 
-let ship_size = ref "-1"
+let ship_size = ref ""
 
 let handle_ship_placement (player_board : Board.t)
     (player_ship_status : string ref) (user_move : string) request =
   if !ship_placed then (
     click2 := Int.of_string user_move;
-    ship_placed:=false;
-    match Game.place_ship player_board !click1 !click2 with 
-    | Some v -> 
-      ship_size := Int.to_string v;
-      player_ship_status := (!player_ship_status) ^ ship_size.contents;
-    | None -> ship_size := Int.to_string (-1);
-  )
+    ship_placed := false;
+    match Game.place_ship player_board !player_ship_status !click1 !click2 with
+    (* A valid placement of the ship *)
+    | Ok v ->
+        ship_size := Int.to_string v;
+
+        player_ship_status := !player_ship_status ^ !ship_size;
+
+        let sorted_ship_sizes =
+          List.sort (String.to_list !player_ship_status) ~compare:Char.compare
+        in
+        let expected_ship_sizes = [ '2'; '3'; '4'; '5' ] in
+
+        if List.equal Char.equal sorted_ship_sizes expected_ship_sizes then
+          Dream.html
+            (Template.ship_placement ~turn:!current_turn
+               ~user_board_status:(Board.board_to_string player_board)
+               ~ship_status:!player_ship_status ~placed_ship_size:!ship_size
+               ~ready:"true" ~error:"" request)
+        else
+          Dream.html
+            (Template.ship_placement ~turn:!current_turn
+               ~user_board_status:(Board.board_to_string player_board)
+               ~ship_status:!player_ship_status ~placed_ship_size:!ship_size
+               ~ready:"false" ~error:"" request)
+    | Error e -> (* Not valid placement, alert user of error *)
+        Dream.html
+          (Template.ship_placement ~turn:!current_turn
+             ~user_board_status:(Board.board_to_string player_board)
+             ~ship_status:!player_ship_status ~placed_ship_size:!ship_size
+             ~ready:"false" ~error:e request))
   else (
     click1 := Int.of_string user_move;
-    ship_placed := true);
-
-  let sorted_ship_sizes =
-    List.sort (String.to_list !player_ship_status) ~compare:Char.compare
-  in
-  let expected_ship_sizes = [ '2'; '3'; '4'; '5' ] in
-
-  if List.equal Char.equal sorted_ship_sizes expected_ship_sizes then
+    ship_placed := true;
+    ship_size := "";
     Dream.html
       (Template.ship_placement ~turn:!current_turn
          ~user_board_status:(Board.board_to_string player_board)
-         ~ship_status:!player_ship_status
-         ~placed_ship_size:ship_size.contents
-         ~ready:"true" request)
-  else
-    Dream.html
-      (Template.ship_placement ~turn:!current_turn
-         ~user_board_status:(Board.board_to_string player_board)
-         ~ship_status:!player_ship_status
-         ~placed_ship_size:ship_size.contents
-         ~ready:"false" request)
+         ~ship_status:!player_ship_status ~placed_ship_size:!ship_size
+         ~ready:"false" ~error:"" request))
 
 let handle_reset request =
   ship_placed := false;
@@ -62,7 +72,7 @@ let handle_reset request =
       (Template.ship_placement ~turn:!current_turn
          ~user_board_status:(Board.board_to_string player1_board)
          ~ship_status:!player1_ship_status ~placed_ship_size:"0" ~ready:"false"
-         request))
+         ~error:"" request))
   else (
     Board.reset player2_board;
     player2_ship_status := "";
@@ -70,7 +80,7 @@ let handle_reset request =
       (Template.ship_placement ~turn:!current_turn
          ~user_board_status:(Board.board_to_string player2_board)
          ~ship_status:!player2_ship_status ~placed_ship_size:"0" ~ready:"false"
-         request))
+         ~error:"" request))
 
 type two_player_save = { player1 : string; player2 : string; turn : string }
 [@@deriving yojson { exn = true }]
@@ -288,7 +298,7 @@ let () =
                (Template.ship_placement ~turn:!current_turn
                   ~user_board_status:(Board.board_to_string player1_board)
                   ~ship_status:!player1_ship_status ~placed_ship_size:"0"
-                  ~ready:"false" request));
+                  ~ready:"false" ~error:"" request));
          (* send position of one click for ship placement *)
          Dream.post "/placement" (fun request ->
              match%lwt Dream.form request with
@@ -303,7 +313,7 @@ let () =
                (Template.ship_placement ~turn:!current_turn
                   ~user_board_status:(Board.board_to_string player1_board)
                   ~ship_status:!player1_ship_status ~placed_ship_size:"0"
-                  ~ready:"false" request));
+                  ~ready:"false" ~error:"" request));
          (* send info of one square for placement *)
          Dream.post "/player1_placement" (fun request ->
              match%lwt Dream.form request with
@@ -318,7 +328,7 @@ let () =
                (Template.ship_placement ~turn:!current_turn
                   ~user_board_status:(Board.board_to_string player2_board)
                   ~ship_status:!player2_ship_status ~placed_ship_size:"0"
-                  ~ready:"false" request));
+                  ~ready:"false" ~error:"" request));
          (* send info of one square for placement *)
          Dream.post "/player2_placement" (fun request ->
              match%lwt Dream.form request with
@@ -328,8 +338,8 @@ let () =
              | _ -> Dream.empty `Bad_Request);
          (* play game - 2-player *)
          Dream.get "/play_two_player" (fun request ->
-            Game.cleanse_board(player1_board);
-            Game.cleanse_board(player2_board);
+             Game.cleanse_board player1_board;
+             Game.cleanse_board player2_board;
              current_turn := "player1";
              Dream.html
                (Template.two_player_game_board
@@ -353,8 +363,8 @@ let () =
              | _ -> Dream.empty `Bad_Request);
          (* play game - single player *)
          Dream.get "/play_single_player" (fun request ->
-            Game.cleanse_board(player1_board);
-            Game.cleanse_board(player2_board);
+             Game.cleanse_board player1_board;
+             Game.cleanse_board player2_board;
              current_turn := "user";
              Dream.html
                (Template.single_player_game_board

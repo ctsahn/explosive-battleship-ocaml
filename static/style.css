@@ -1,4 +1,5 @@
 .board { border-spacing: 0; border-collapse: separate; }
 .board th { padding: .5em; }
 .board td { border: 1px solid; width: 2em; height: 2em; text-align: center; }
-.board .light { background: #eee; }
+.board .light { background: rgb(255, 255, 255); }
+.board .light:hover { background: rgb(64, 200, 200); }
