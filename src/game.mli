@@ -1,8 +1,3 @@
-val cpu_horz_queue : (int * int) Core.Queue.t
-val cpu_vert_queue : (int * int) Core.Queue.t
-val cpu_attack_direction : string ref
-
-
 val not_straight_error : string
 val touching_error : string
 val repeat_error : string
@@ -22,7 +17,7 @@ val place_ship : Board.t -> string -> int -> int-> int-> int -> (int, string) re
 
      Return true if a ship was hit, false otherwise.
 *)
-val attack : Board.t -> int -> bool
+val player_attack : Board.t -> int -> bool
 
 (*
     Check if a player has sunk all of the opponent's ships. 
@@ -34,13 +29,7 @@ val is_game_over : Board.t -> bool
 *)
 val has_sunk : Board.t -> int -> int -> bool
 
-(*
-    Given the board to attack and previous hits, the computer chooses a valid position on the 
-    opponent's board depending on its previous successful hits. 
 
-    Return true if a ship was hit, false otherwise.
-*)
-val cpu_attack : Board.t -> bool
 
 (* 
     Check whether a position in the board is able to be attacked (not previously attacked, not out of bounds, etc).
@@ -49,12 +38,11 @@ val is_valid_attack: Board.t -> int -> int -> bool
 
 val cleanse_board: Board.t -> unit
 
-(*
-    Randomly place CPU ships on a board.
-*)
-val place_cpu_ships: Board.t -> int -> unit
+val save_single_player_game : Board.t -> Board.t -> string -> (int * int) Core.Queue.t -> (int * int) Core.Queue.t -> string -> unit
+val save_two_player_game : Board.t -> Board.t -> string -> unit
 
-(*
+(* True if two player game *)
+val load_game : Board.t -> Board.t -> string ref -> (int * int) Core.Queue.t -> (int * int) Core.Queue.t -> string ref ->  bool 
 
 
 
@@ -64,11 +52,11 @@ val place_cpu_ships: Board.t -> int -> unit
 
     Boolean value is true if playing against the computer, false otherwise.
 *)
-val load_game : string -> bool -> Board.t * Board.t * bool 
+
 
 (*
     Save the current game state.
 
     Boolean value is true if playing against the computer, false otherwise.
 *)
-val save_game : Board.t -> Board.t -> bool -> string * bool *)
+

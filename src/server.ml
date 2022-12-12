@@ -20,14 +20,16 @@ let handle_ship_placement (player_board : Board.t)
   if !ship_placed then (
     click2 := Int.of_string user_move;
     ship_placed := false;
-    let click1_coords = Board.convert_position !click1 in 
-    let click2_coords = Board.convert_position !click2 in 
+    let click1_coords = Board.convert_position !click1 in
+    let click2_coords = Board.convert_position !click2 in
 
-    let row1 = fst click1_coords in 
-    let col1 = snd click1_coords in 
-    let row2 = fst click2_coords in 
-    let col2 = snd click2_coords in 
-    match Game.place_ship player_board !player_ship_status row1 col1 row2 col2 with
+    let row1 = fst click1_coords in
+    let col1 = snd click1_coords in
+    let row2 = fst click2_coords in
+    let col2 = snd click2_coords in
+    match
+      Game.place_ship player_board !player_ship_status row1 col1 row2 col2
+    with
     (* A valid placement of the ship *)
     | Ok v ->
         ship_size := Int.to_string v;
@@ -51,7 +53,8 @@ let handle_ship_placement (player_board : Board.t)
                ~user_board_status:(Board.board_to_string player_board)
                ~ship_status:!player_ship_status ~placed_ship_size:!ship_size
                ~ready:"false" ~error:"" request)
-    | Error e -> (* Not valid placement, alert user of error *)
+    | Error e ->
+        (* Not valid placement, alert user of error *)
         Dream.html
           (Template.ship_placement ~turn:!current_turn
              ~user_board_status:(Board.board_to_string player_board)
@@ -67,7 +70,7 @@ let handle_ship_placement (player_board : Board.t)
          ~ship_status:!player_ship_status ~placed_ship_size:!ship_size
          ~ready:"false" ~error:"" request))
 
-let handle_reset request =
+let handle_placement_reset request =
   ship_placed := false;
   click1 := 0;
   click2 := 0;
@@ -105,116 +108,47 @@ type single_player_save = {
 let handle_save request =
   (* Save a single player game *)
   if String.( = ) !current_turn "user" || String.( = ) !current_turn "cpu" then (
-    (* For converting a tuple into a string used in JSON *)
-    let tuple_to_string (tup : int * int) =
-      Int.to_string (fst tup) ^ "," ^ Int.to_string (snd tup)
-    in
-
-    let save_states =
-      {
-        user = Board.board_to_string player1_board;
-        cpu = Board.board_to_string player2_board;
-        turn = !current_turn;
-        cpu_horz_queue =
-          List.to_string ~f:tuple_to_string (Queue.to_list Game.cpu_horz_queue);
-        cpu_vert_queue =
-          List.to_string ~f:tuple_to_string (Queue.to_list Game.cpu_vert_queue);
-        cpu_direction = !Game.cpu_attack_direction;
-      }
-    in
-
-    let out_str =
-      single_player_save_to_yojson save_states |> Yojson.Safe.to_string
-    in
-    Out_channel.write_all "saved.txt" ~data:out_str;
+    Game.save_single_player_game player1_board player2_board !current_turn
+      Cpu.horz_attack_queue Cpu.vert_attack_queue !Cpu.attack_direction;
 
     Dream.html
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
          ~cpu_board_status:(Board.board_to_string player2_board)
          ~turn:!current_turn ~game_over:"false" request))
-  else
-    let save_states =
-      {
-        player1 = Board.board_to_string player1_board;
-        player2 = Board.board_to_string player2_board;
-        turn = !current_turn;
-      }
-    in
-    let out_str =
-      two_player_save_to_yojson save_states |> Yojson.Safe.to_string
-    in
-    Out_channel.write_all "saved.txt" ~data:out_str;
+  else (
+    Game.save_two_player_game player1_board player2_board !current_turn;
+    Dream.html
+      (Template.two_player_game_board
+         ~player1_board_status:(Board.board_to_string player1_board)
+         ~player2_board_status:(Board.board_to_string player2_board)
+         ~turn:!current_turn ~game_over:"false" request))
 
+let handle_load request =
+  let load_result =
+    Game.load_game player1_board player2_board current_turn
+      Cpu.horz_attack_queue Cpu.vert_attack_queue Cpu.attack_direction
+  in
+
+  if load_result then
     Dream.html
       (Template.two_player_game_board
          ~player1_board_status:(Board.board_to_string player1_board)
          ~player2_board_status:(Board.board_to_string player2_board)
          ~turn:!current_turn ~game_over:"false" request)
-
-let handle_load request =
-  let load_json = In_channel.read_all "saved.txt" |> Yojson.Safe.from_string in
-
-  (* Load it as a 2-player record first *)
-  let record = two_player_save_of_yojson load_json in
-  match record with
-  | Ok two_player_record ->
-      current_turn := two_player_record.turn;
-      Board.populate_board player1_board two_player_record.player1;
-      Board.populate_board player2_board two_player_record.player2;
-
-      Dream.html
-        (Template.two_player_game_board
-           ~player1_board_status:(Board.board_to_string player1_board)
-           ~player2_board_status:(Board.board_to_string player2_board)
-           ~turn:!current_turn ~game_over:"false" request)
-  (* Error thrown, so must be single player record *)
-  | Error _ ->
-      (* Convert a the saved queue string to a list, so we can populate the CPU queues *)
-      let queue_string_to_list (str : string) : (int * int) list =
-        (* Empty queues *)
-        if String.( = ) str "()" then []
-        else
-          let filtered_list =
-            String.chop_prefix_exn ~prefix:"(" str
-            |> String.chop_suffix_exn ~suffix:")"
-            |> String.split ~on:' '
-          in
-
-          List.map filtered_list ~f:(fun tuple_str ->
-              let row_col_list = String.split tuple_str ~on:',' in
-
-              let row_str = List.hd_exn row_col_list in
-              let col_str = List.last_exn row_col_list in
-
-              (Int.of_string row_str, Int.of_string col_str))
-      in
-      let single_player_record = single_player_save_of_yojson_exn load_json in
-      current_turn := single_player_record.turn;
-      Board.populate_board player1_board single_player_record.user;
-      Board.populate_board player2_board single_player_record.cpu;
-      Game.cpu_attack_direction := single_player_record.cpu_direction;
-
-      (* Populate queues *)
-      Queue.clear Game.cpu_horz_queue;
-      queue_string_to_list single_player_record.cpu_horz_queue
-      |> Queue.enqueue_all Game.cpu_horz_queue;
-      Queue.clear Game.cpu_vert_queue;
-      queue_string_to_list single_player_record.cpu_vert_queue
-      |> Queue.enqueue_all Game.cpu_vert_queue;
-
-      Dream.html
-        (Template.single_player_game_board
-           ~user_board_status:(Board.board_to_string player1_board)
-           ~cpu_board_status:(Board.board_to_string player2_board)
-           ~turn:!current_turn ~game_over:"false" request)
+  else
+    Dream.html
+      (Template.single_player_game_board
+         ~user_board_status:(Board.board_to_string player1_board)
+         ~cpu_board_status:(Board.board_to_string player2_board)
+         ~turn:!current_turn ~game_over:"false" request)
 
 (* For 2-player turns *)
 let handle_player_turn (user_move : string) (opponent_board : Board.t) request =
   let user_move_int = Int.of_string user_move in
 
   (* If a ship was hit, true *)
-  let ship_hit = Game.attack opponent_board user_move_int in
+  let ship_hit = Game.player_attack opponent_board user_move_int in
   if ship_hit then
     if Game.is_game_over opponent_board then
       Dream.html
@@ -239,8 +173,8 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t) request =
          ~player2_board_status:(Board.board_to_string player2_board)
          ~turn:!current_turn ~game_over:"false" request))
 
-let cpu_turn request =
-  let ship_hit = Game.cpu_attack player1_board in
+let handle_cpu_turn request =
+  let ship_hit = Cpu.cpu_attack player1_board in
   if ship_hit then
     if Game.is_game_over player1_board then
       Dream.html
@@ -266,7 +200,7 @@ let cpu_turn request =
 (* For single player turn *)
 let handle_user_turn (user_move : string) request =
   let user_move_int = Int.of_string user_move in
-  let ship_hit = Game.attack player2_board user_move_int in
+  let ship_hit = Game.player_attack player2_board user_move_int in
   if ship_hit then
     if Game.is_game_over player2_board then
       Dream.html
@@ -371,10 +305,9 @@ let () =
          (* play game - single player *)
          Dream.get "/play_single_player" (fun request ->
              Game.cleanse_board player1_board;
-             Game.place_cpu_ships player2_board 5;
+             Cpu.place_cpu_ships player2_board 5;
              Game.cleanse_board player2_board;
-            
-            
+
              current_turn := "user";
              Dream.html
                (Template.single_player_game_board
@@ -392,8 +325,8 @@ let () =
          (* CPU turn  - it is a GET request because we aren't sending any data *)
          Dream.get "/cpu_turn" (fun request ->
              Core_unix.sleep 1;
-             cpu_turn request);
-         Dream.get "/reset_board" (fun request -> handle_reset request);
+             handle_cpu_turn request);
+         Dream.get "/reset_board" (fun request -> handle_placement_reset request);
          Dream.get "/save" (fun request -> handle_save request);
          Dream.get "/static/**" (Dream.static "./static");
        ]

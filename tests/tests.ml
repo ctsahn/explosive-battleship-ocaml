@@ -1,7 +1,6 @@
 open Core
 open OUnit2
 open Board
-open Game
 
 let test_board_to_string _ =
   assert_equal "0000"
@@ -92,15 +91,15 @@ let horizontal_ship_not_sunk =
   arr
 
 let test_has_sunk _ =
-  assert_equal true @@ has_sunk vertical_ship_sunk 0 1;
+  assert_equal true @@ Game.has_sunk vertical_ship_sunk 0 1;
   assert_equal ShipSunken @@ vertical_ship_sunk.(0).(1);
   assert_equal ShipSunken @@ vertical_ship_sunk.(1).(1);
 
-  assert_equal true @@ has_sunk vertical_ship_sunk_2 1 1;
+  assert_equal true @@ Game.has_sunk vertical_ship_sunk_2 1 1;
 
-  assert_equal false @@ has_sunk vertical_ship_not_sunk 1 1;
-  assert_equal true @@ has_sunk horizontal_ship_sunk 0 1;
-  assert_equal false @@ has_sunk horizontal_ship_not_sunk 0 0
+  assert_equal false @@ Game.has_sunk vertical_ship_not_sunk 1 1;
+  assert_equal true @@ Game.has_sunk horizontal_ship_sunk 0 1;
+  assert_equal false @@ Game.has_sunk horizontal_ship_not_sunk 0 0
 
 let make_sample_array =
   let arr = Array.make_matrix ~dimx:2 ~dimy:2 Ship in
@@ -109,39 +108,55 @@ let make_sample_array =
   arr
 
 let test_is_game_over _ =
-  assert_equal true @@ is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 Empty);
   assert_equal true
-  @@ is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken);
-  assert_equal false @@ is_game_over make_sample_array
+  @@ Game.is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 Empty);
+  assert_equal true
+  @@ Game.is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken);
+  assert_equal false @@ Game.is_game_over make_sample_array
 
 let empty_array = Array.make_matrix ~dimx:10 ~dimy:10 Empty
 let ship_full_array = Array.make_matrix ~dimx:10 ~dimy:10 Ship
 
 let test_attack _ =
-  assert_equal true @@ attack ship_full_array 4;
-  assert_equal false @@ attack empty_array 4
+  assert_equal true @@ Game.player_attack ship_full_array 4;
+  assert_equal false @@ Game.player_attack empty_array 4
 
 let test_cpu_attack _ =
-  assert_equal false @@ cpu_attack empty_array;
-  assert_equal true @@ Queue.is_empty cpu_horz_queue;
-  assert_equal true @@ Queue.is_empty cpu_vert_queue;
-  assert_equal true @@ cpu_attack ship_full_array;
-  assert_equal "" @@ !cpu_attack_direction;
-  assert_equal false @@ Queue.is_empty cpu_horz_queue;
-  assert_equal false @@ Queue.is_empty cpu_vert_queue;
-  assert_equal true @@ cpu_attack ship_full_array;
+  assert_equal false @@ Cpu.cpu_attack empty_array;
+  assert_equal true @@ Queue.is_empty Cpu.horz_attack_queue;
+  assert_equal true @@ Queue.is_empty Cpu.vert_attack_queue;
+  assert_equal true @@ Cpu.cpu_attack ship_full_array;
+  assert_equal "" @@ !Cpu.attack_direction;
+  assert_equal false @@ Queue.is_empty Cpu.horz_attack_queue;
+  assert_equal false @@ Queue.is_empty Cpu.vert_attack_queue;
+  assert_equal true @@ Cpu.cpu_attack ship_full_array;
   assert_equal true
-  @@ (String.( = ) !cpu_attack_direction "horizontal"
-     || String.( = ) !cpu_attack_direction "vertical")
+  @@ (String.( = ) !Cpu.attack_direction "horizontal"
+     || String.( = ) !Cpu.attack_direction "vertical")
 
 let test_place_ship _ =
   let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
 
-  assert_equal (Ok 3) @@ place_ship arr "" 1 5 1 7;
+  assert_equal (Ok 3) @@ Game.place_ship arr "" 1 5 1 7;
   assert_equal Ship @@ arr.(1).(5);
   assert_equal Ship @@ arr.(1).(6);
   assert_equal Ship @@ arr.(1).(7);
-  assert_equal (Ok 4) @@ place_ship arr "" 2 9 5 9;
+  assert_equal Miss @@ arr.(1).(4);
+  assert_equal Miss @@ arr.(1).(8);
+
+  assert_equal Miss @@ arr.(0).(4);
+  assert_equal Miss @@ arr.(0).(5);
+  assert_equal Miss @@ arr.(0).(6);
+  assert_equal Miss @@ arr.(0).(7);
+  assert_equal Miss @@ arr.(0).(8);
+
+  assert_equal Miss @@ arr.(2).(4);
+  assert_equal Miss @@ arr.(2).(5);
+  assert_equal Miss @@ arr.(2).(6);
+  assert_equal Miss @@ arr.(2).(7);
+  assert_equal Miss @@ arr.(2).(8);
+
+  assert_equal (Ok 4) @@ Game.place_ship arr "" 2 9 5 9;
   assert_equal Ship @@ arr.(2).(9);
   assert_equal Ship @@ arr.(3).(9);
   assert_equal Ship @@ arr.(4).(9);
@@ -150,26 +165,109 @@ let test_place_ship _ =
 let test_is_valid_attack _ =
   let miss_arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in
 
-  assert_equal false @@ is_valid_attack miss_arr 1 1;
-  assert_equal true @@ is_valid_attack empty_array 1 1
+  assert_equal false @@ Game.is_valid_attack miss_arr 1 1;
+  assert_equal true @@ Game.is_valid_attack empty_array 1 1
 
 let test_place_cpu_ship _ =
   let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  place_cpu_ships arr 5;
+  Cpu.place_cpu_ships arr 5;
   assert_equal (5 + 4 + 3 + 2)
   @@ Array.fold arr ~init:0 ~f:(fun tot arr_row ->
          tot + Array.count arr_row ~f:(fun e -> equal_status e Ship));
   let arr2 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  place_cpu_ships arr2 4;
+  Cpu.place_cpu_ships arr2 4;
   assert_equal (4 + 3 + 2)
   @@ Array.fold arr2 ~init:0 ~f:(fun tot arr_row ->
          tot + Array.count arr_row ~f:(fun e -> equal_status e Ship));
 
   let arr3 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  place_cpu_ships arr3 3;
+  Cpu.place_cpu_ships arr3 3;
   assert_equal (3 + 2)
   @@ Array.fold arr3 ~init:0 ~f:(fun tot arr_row ->
          tot + Array.count arr_row ~f:(fun e -> equal_status e Ship))
+
+let test_cleanse_board _ =
+  let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+
+  assert_equal (Ok 3) @@ Game.place_ship arr "" 1 5 1 7;
+  Game.cleanse_board arr;
+  assert_equal Ship @@ arr.(1).(5);
+  assert_equal Ship @@ arr.(1).(6);
+  assert_equal Ship @@ arr.(1).(7);
+
+  assert_equal Empty @@ arr.(1).(4);
+  assert_equal Empty @@ arr.(1).(8);
+
+  assert_equal Empty @@ arr.(0).(4);
+  assert_equal Empty @@ arr.(0).(5);
+  assert_equal Empty @@ arr.(0).(6);
+  assert_equal Empty @@ arr.(0).(7);
+  assert_equal Empty @@ arr.(0).(8);
+
+  assert_equal Empty @@ arr.(2).(4);
+  assert_equal Empty @@ arr.(2).(5);
+  assert_equal Empty @@ arr.(2).(6);
+  assert_equal Empty @@ arr.(2).(7);
+  assert_equal Empty @@ arr.(2).(8)
+
+let test_save_load_two_player_game _ =
+  let player1_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let _ = Game.place_ship player1_board "" 1 5 2 5 in
+  let player2_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let _ = Game.place_ship player2_board "" 6 1 8 1 in
+
+  Game.save_two_player_game player1_board player2_board "player1";
+
+  let new_player1_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let new_player2_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+
+  let loaded_turn = ref "" in
+  let res =
+    Game.load_game new_player1_board new_player2_board loaded_turn
+      (Queue.create ()) (Queue.create ()) (ref "")
+  in
+
+  assert_equal true @@ res;
+  assert_equal player1_board @@ new_player1_board;
+  assert_equal player2_board @@ new_player2_board;
+  assert_equal "player1" @@ !loaded_turn
+
+let test_save_load_single_player_game _ =
+  let user_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let _ = Game.place_ship user_board "" 1 5 2 5 in
+  let cpu_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let _ = Game.place_ship cpu_board "" 6 1 8 1 in
+
+  let horz_queue = Queue.create () in
+  Queue.enqueue horz_queue (5, 5);
+  Queue.enqueue horz_queue (5, 7);
+
+  let vert_queue = Queue.create () in
+  Queue.enqueue vert_queue (8, 8);
+  Queue.enqueue vert_queue (6, 8);
+
+  Game.save_single_player_game user_board cpu_board "user" horz_queue vert_queue
+    "vertical";
+
+  let new_user_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let new_cpu_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let new_horz_queue = Queue.create () in
+  let new_vert_queue = Queue.create () in
+
+  let loaded_turn = ref "" in
+  let loaded_dir = ref "" in
+  let res =
+    Game.load_game new_user_board new_cpu_board loaded_turn new_horz_queue
+      new_vert_queue loaded_dir
+  in
+
+  assert_equal false @@ res;
+  assert_equal user_board @@ new_user_board;
+  assert_equal cpu_board @@ new_cpu_board;
+  assert_equal "user" @@ !loaded_turn;
+  assert_equal (Queue.to_list horz_queue) @@ Queue.to_list new_horz_queue;
+  assert_equal (Queue.to_list vert_queue) @@ Queue.to_list new_vert_queue;
+  assert_equal "vertical" @@ !loaded_dir
 
 let game_tests =
   "Game"
@@ -182,6 +280,10 @@ let game_tests =
          "place_ship" >:: test_place_ship;
          "is_valid_attack" >:: test_is_valid_attack;
          "place_cpu_ship" >:: test_place_cpu_ship;
+         "cleanse_board" >:: test_cleanse_board;
+         "save_two_player_game, load_game" >:: test_save_load_two_player_game;
+         "save_single_player_game, load_game"
+         >:: test_save_load_single_player_game;
        ]
 
 let series = "Battleship Tests" >::: [ board_tests; game_tests ]

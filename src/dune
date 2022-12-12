@@ -6,15 +6,21 @@
 (library
   (name game)
   (modules game)
-  (libraries board core)
+  (libraries board core yojson ppx_deriving_yojson.runtime )
+  (preprocess (pps ppx_jane bisect_ppx ppx_deriving_yojson)))
+
+(library
+  (name cpu)
+  (modules cpu)
+  (libraries board core game)
   (preprocess (pps ppx_jane bisect_ppx)))
 
 (executable
  (name server)
  (modules server template )
  
- (libraries dream core core_unix board game yojson ppx_deriving_yojson.runtime )
- (preprocess (pps lwt_ppx  ppx_deriving_yojson))) 
+ (libraries dream core core_unix board game cpu  )
+ (preprocess (pps lwt_ppx  ))) 
 
  (rule
  (targets template.ml)
