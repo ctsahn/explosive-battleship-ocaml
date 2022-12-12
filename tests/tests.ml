@@ -15,23 +15,21 @@ let test_board_to_string _ =
   assert_equal "4444"
   @@ board_to_string (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken)
 
-
-let test_populate_board _ = 
-
-  let empty_arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in 
+let test_populate_board _ =
+  let empty_arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
   populate_board empty_arr "111111111";
   assert_equal (Array.make_matrix ~dimx:3 ~dimy:3 Miss) @@ empty_arr;
 
   let result_arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
   result_arr.(0).(0) <- ShipHit;
   result_arr.(0).(1) <- ShipSunken;
-  result_arr.(0).(2) <- Miss;  
+  result_arr.(0).(2) <- Miss;
   result_arr.(1).(0) <- Ship;
 
-  let empty_arr_2 = Array.make_matrix ~dimx:3 ~dimy:3 Empty in 
-  
+  let empty_arr_2 = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
+
   populate_board empty_arr_2 "341200000";
-  assert_equal result_arr @@ empty_arr_2 
+  assert_equal result_arr @@ empty_arr_2
 
 let test_initialize_board _ =
   assert_equal
@@ -44,10 +42,11 @@ let test_convert_position _ =
   assert_equal (0, 1) @@ convert_position 1;
   assert_equal (9, 2) @@ convert_position 92
 
-let test_reset _ = 
+let test_reset _ =
   let sample_array =
     let arr = Array.make_matrix ~dimx:10 ~dimy:10 Ship in
-    arr in 
+    arr
+  in
   reset sample_array;
   assert_equal (Array.make_matrix ~dimx:10 ~dimy:10 Empty) @@ sample_array
 
@@ -59,7 +58,7 @@ let board_tests =
          "populate_board" >:: test_populate_board;
          "initialize board" >:: test_initialize_board;
          "convert position" >:: test_convert_position;
-         "reset" >:: test_reset
+         "reset" >:: test_reset;
        ]
 
 let vertical_ship_sunk =
@@ -115,11 +114,8 @@ let test_is_game_over _ =
   @@ is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken);
   assert_equal false @@ is_game_over make_sample_array
 
-let empty_array =
-  Array.make_matrix ~dimx:10 ~dimy:10 Empty
-
-let ship_full_array =
-  Array.make_matrix ~dimx:10 ~dimy:10 Ship
+let empty_array = Array.make_matrix ~dimx:10 ~dimy:10 Empty
+let ship_full_array = Array.make_matrix ~dimx:10 ~dimy:10 Ship
 
 let test_attack _ =
   assert_equal true @@ attack ship_full_array 4;
@@ -141,21 +137,39 @@ let test_cpu_attack _ =
 let test_place_ship _ =
   let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
 
-  assert_equal (Ok 3) @@ place_ship arr "" 15 17;
+  assert_equal (Ok 3) @@ place_ship arr "" 1 5 1 7;
   assert_equal Ship @@ arr.(1).(5);
   assert_equal Ship @@ arr.(1).(6);
   assert_equal Ship @@ arr.(1).(7);
-  assert_equal (Ok 4) @@ place_ship arr "" 29 59;
+  assert_equal (Ok 4) @@ place_ship arr "" 2 9 5 9;
   assert_equal Ship @@ arr.(2).(9);
   assert_equal Ship @@ arr.(3).(9);
   assert_equal Ship @@ arr.(4).(9);
   assert_equal Ship @@ arr.(5).(9)
 
-let test_is_valid_attack _ = 
+let test_is_valid_attack _ =
   let miss_arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in
-  
-  assert_equal false @@ is_valid_attack miss_arr 1 1; 
+
+  assert_equal false @@ is_valid_attack miss_arr 1 1;
   assert_equal true @@ is_valid_attack empty_array 1 1
+
+let test_place_cpu_ship _ =
+  let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  place_cpu_ships arr 5;
+  assert_equal (5 + 4 + 3 + 2)
+  @@ Array.fold arr ~init:0 ~f:(fun tot arr_row ->
+         tot + Array.count arr_row ~f:(fun e -> equal_status e Ship));
+  let arr2 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  place_cpu_ships arr2 4;
+  assert_equal (4 + 3 + 2)
+  @@ Array.fold arr2 ~init:0 ~f:(fun tot arr_row ->
+         tot + Array.count arr_row ~f:(fun e -> equal_status e Ship));
+
+  let arr3 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  place_cpu_ships arr3 3;
+  assert_equal (3 + 2)
+  @@ Array.fold arr3 ~init:0 ~f:(fun tot arr_row ->
+         tot + Array.count arr_row ~f:(fun e -> equal_status e Ship))
 
 let game_tests =
   "Game"
@@ -167,6 +181,7 @@ let game_tests =
          "attack" >:: test_attack;
          "place_ship" >:: test_place_ship;
          "is_valid_attack" >:: test_is_valid_attack;
+         "place_cpu_ship" >:: test_place_cpu_ship;
        ]
 
 let series = "Battleship Tests" >::: [ board_tests; game_tests ]

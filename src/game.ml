@@ -70,21 +70,17 @@ let rec check_above_below (board : Board.t) (row1 : int) (row2 : int)
     (* too close to other ships *)
   else check_above_below board (row1 + 1) row2 col
 
-let get_row_col (click1 : int) (click2 : int) : int * int * int * int =
+let order_row_col (row1 : int) (col1 : int) (row2 : int) (col2 : int) :
+    int * int * int * int =
   (* Get the rows and columns of the start and end clicks *)
-  let row1 = fst (Board.convert_position click1) in
-  let col1 = snd (Board.convert_position click1) in
-  let row2 = fst (Board.convert_position click2) in
-  let col2 = snd (Board.convert_position click2) in
-
   if row1 < row2 then
     if col1 < col2 then (row1, row2, col1, col2) else (row1, row2, col2, col1)
   else if col1 < col2 then (row2, row1, col1, col2)
   else (row2, row1, col2, col1)
 
-let place_ship (board : Board.t) (placed_ships : string) (click1 : int)
-    (click2 : int) : (int, string) result =
-  let row1, row2, col1, col2 = get_row_col click1 click2 in
+let place_ship (board : Board.t) (placed_ships : string) (row1 : int)
+    (col1 : int) (row2 : int) (col2 : int) : (int, string) result =
+  let row1, row2, col1, col2 = order_row_col row1 col1 row2 col2 in
   if row1 <> row2 && col1 <> col2 then Error not_straight_error
   else if row1 = row2 then
     let ship_size = col2 - col1 + 1 in
@@ -114,14 +110,59 @@ let place_ship (board : Board.t) (placed_ships : string) (click1 : int)
     else if
       String.is_substring placed_ships ~substring:(Int.to_string ship_size)
     then Error repeat_error
-    else(
-        for i = row1 to row2 do
-          Array.fill board.(i) ~pos:col1 ~len:1 Ship;
-          create_miss_radius board i col1
-        done;
-      
+    else (
+      for i = row1 to row2 do
+        Array.fill board.(i) ~pos:col1 ~len:1 Ship;
+        create_miss_radius board i col1
+      done;
 
       Ok ship_size)
+
+let rec place_cpu_ships (board : Board.t) (ship_size : int): unit =
+
+  (* Smallest ship size will be 2*)
+  if ship_size >= 2 then
+    let board_length = Array.length board in
+
+    let place_row = Random.int board_length in
+    let place_col = Random.int board_length in
+
+    (* Randomly select direction to place ship *)
+    let dir = Random.int 4 in
+    if dir = 0 && place_row + ship_size - 1 < board_length then
+      match
+        place_ship board "" place_row
+          (place_row + ship_size - 1)
+          place_col place_col
+      with
+      | Ok _ -> place_cpu_ships board (ship_size - 1) (* If placed successfully, place different ship*)
+      | Error _ -> place_cpu_ships board ship_size (* Try again for the same size ship *)
+    else if dir = 1 && place_row - (ship_size - 1) >= 0 then
+      match
+        place_ship board "" place_row
+          (place_row - (ship_size - 1))
+          place_col place_col
+      with
+      | Ok _ -> place_cpu_ships board (ship_size - 1)
+      | Error _ -> place_cpu_ships board ship_size
+    else if dir = 2 && place_col + (ship_size - 1) < board_length then
+      match
+        place_ship board "" place_row
+          place_row
+          place_col (place_col + (ship_size - 1))
+      with
+      | Ok _ -> place_cpu_ships board (ship_size - 1)
+      | Error _ -> place_cpu_ships board ship_size
+    else if dir = 3 && place_col - (ship_size - 1) >=0 then
+      match
+        place_ship board "" place_row
+          place_row
+          place_col (place_col - (ship_size - 1))
+      with
+      | Ok _ -> place_cpu_ships board (ship_size - 1)
+      | Error _ -> place_cpu_ships board ship_size
+    else 
+      place_cpu_ships board ship_size (* No directions available for square, try again *)
 
 let cleanse_board (board : Board.t) : unit =
   (* Only keep ships on the board, everything else Empty *)

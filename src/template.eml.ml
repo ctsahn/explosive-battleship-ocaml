@@ -484,10 +484,17 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_ov
 
 <form action="/save" method="get">
       
-<button type="submit"> Save game </button>
 
-     
-</form>
+%     if (game_over = "true") then begin
+            <button type="submit" disabled > Save game </button>
+%     end
+%     else begin 
+            <button type="submit"> Save game </button>
+%     end;
+
+
+         
+  </form>
 
 
 <script src= "static/single-player.js">

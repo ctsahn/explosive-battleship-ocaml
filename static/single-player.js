@@ -48,7 +48,7 @@ function loadColors(){
         if(cpuBoardStatus[i] == 1){
           document.getElementById("cpucell" + i).innerHTML= "•";
         }
-        // ship
+        // ship: for testing only, delete later TODO
         else if(cpuBoardStatus[i] == 2){
           document.getElementById("cpucell" + i).style.backgroundColor = "blue";
         }

@@ -15,7 +15,7 @@ val too_big_error : string
 
      Return true if placement is possible, false otherwise.
 *)
-val place_ship : Board.t -> string -> int -> int -> (int, string) result
+val place_ship : Board.t -> string -> int -> int-> int-> int -> (int, string) result
 
 (*
      Given the position and board to attack, decide whether the player hit a ship or missed.
@@ -49,12 +49,13 @@ val is_valid_attack: Board.t -> int -> int -> bool
 
 val cleanse_board: Board.t -> unit
 
-
-(*
 (*
     Randomly place CPU ships on a board.
 *)
-val place_cpu_ships: Board.t
+val place_cpu_ships: Board.t -> int -> unit
+
+(*
+
 
 
 

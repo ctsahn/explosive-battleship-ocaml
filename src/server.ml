@@ -20,7 +20,14 @@ let handle_ship_placement (player_board : Board.t)
   if !ship_placed then (
     click2 := Int.of_string user_move;
     ship_placed := false;
-    match Game.place_ship player_board !player_ship_status !click1 !click2 with
+    let click1_coords = Board.convert_position !click1 in 
+    let click2_coords = Board.convert_position !click2 in 
+
+    let row1 = fst click1_coords in 
+    let col1 = snd click1_coords in 
+    let row2 = fst click2_coords in 
+    let col2 = snd click2_coords in 
+    match Game.place_ship player_board !player_ship_status row1 col1 row2 col2 with
     (* A valid placement of the ship *)
     | Ok v ->
         ship_size := Int.to_string v;
@@ -364,7 +371,10 @@ let () =
          (* play game - single player *)
          Dream.get "/play_single_player" (fun request ->
              Game.cleanse_board player1_board;
+             Game.place_cpu_ships player2_board 5;
              Game.cleanse_board player2_board;
+            
+            
              current_turn := "user";
              Dream.html
                (Template.single_player_game_board
