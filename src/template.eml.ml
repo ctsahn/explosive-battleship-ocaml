@@ -319,7 +319,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~gam
             <button type="submit" disabled > Save game </button>
 %     end
 %     else begin 
-            <button type="submit"> Save game </button>
+            <button type="submit" onclick="alert('Game saved to saved.txt! (Note that saving again will overwrite this file)')"> Save game </button>
 %     end;
 
 
@@ -489,7 +489,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_ov
             <button type="submit" disabled > Save game </button>
 %     end
 %     else begin 
-            <button type="submit"> Save game </button>
+            <button type="submit" onclick="alert('Game saved to saved.txt! (Note that saving again will overwrite this file)')"> Save game </button>
 %     end;
 
 
