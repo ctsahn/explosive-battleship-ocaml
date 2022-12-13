@@ -4,6 +4,8 @@ let boards = Board.initialize_boards
 let player1_board = fst boards (* User's board when single player *)
 let player2_board = snd boards (* CPU's board when single player *)
 let current_turn = ref ""
+let player1_bombs = ref 3
+let player2_bombs = ref 3
 let ship_placed = ref false (* true after two clicks *)
 let click1 = ref 0
 let click2 = ref 0
@@ -108,25 +110,29 @@ type single_player_save = {
 let handle_save request =
   (* Save a single player game *)
   if String.( = ) !current_turn "user" || String.( = ) !current_turn "cpu" then (
-    Game.save_single_player_game player1_board player2_board !current_turn
+    Game.save_single_player_game player1_board player2_board !player1_bombs !player2_bombs !current_turn
       Cpu.horz_attack_queue Cpu.vert_attack_queue !Cpu.attack_direction;
 
     Dream.html
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
          ~cpu_board_status:(Board.board_to_string player2_board)
+         ~user_bombs:(Int.to_string !player1_bombs)
+         ~cpu_bombs:(Int.to_string !player2_bombs)
          ~turn:!current_turn ~game_over:"false" request))
   else (
-    Game.save_two_player_game player1_board player2_board !current_turn;
+    Game.save_two_player_game player1_board player2_board !player1_bombs !player2_bombs !current_turn;
     Dream.html
       (Template.two_player_game_board
          ~player1_board_status:(Board.board_to_string player1_board)
          ~player2_board_status:(Board.board_to_string player2_board)
+         ~player1_bombs:(Int.to_string !player1_bombs)
+         ~player2_bombs:(Int.to_string !player2_bombs)
          ~turn:!current_turn ~game_over:"false" request))
 
 let handle_load request =
   let load_result =
-    Game.load_game player1_board player2_board current_turn
+    Game.load_game player1_board player2_board player1_bombs player2_bombs current_turn
       Cpu.horz_attack_queue Cpu.vert_attack_queue Cpu.attack_direction
   in
 
@@ -135,32 +141,63 @@ let handle_load request =
       (Template.two_player_game_board
          ~player1_board_status:(Board.board_to_string player1_board)
          ~player2_board_status:(Board.board_to_string player2_board)
+         ~player1_bombs:(Int.to_string !player1_bombs)
+         ~player2_bombs:(Int.to_string !player2_bombs)
          ~turn:!current_turn ~game_over:"false" request)
   else
     Dream.html
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
          ~cpu_board_status:(Board.board_to_string player2_board)
+         ~user_bombs:(Int.to_string !player1_bombs)
+         ~cpu_bombs:(Int.to_string !player2_bombs)
          ~turn:!current_turn ~game_over:"false" request)
 
 (* For 2-player turns *)
 let handle_player_turn (user_move : string) (opponent_board : Board.t) request =
-  let user_move_int = Int.of_string user_move in
+  let ship_hit =
+    if
+      String.is_substring user_move ~substring:"bomb"
+      && ((String.( = ) !current_turn "player1" && !player1_bombs > 0)
+         || (String.( = ) !current_turn "player2" && !player2_bombs > 0))
+    then (
+      let user_move_tuple =
+        Int.of_string (String.chop_prefix_exn user_move ~prefix:"bomb")
+        |> Board.convert_position
+      in
+      let row = fst user_move_tuple in
+      let col = snd user_move_tuple in
 
-  (* If a ship was hit, true *)
-  let ship_hit = Game.player_attack opponent_board user_move_int in
+      if String.( = ) !current_turn "player1" then
+        player1_bombs := !player1_bombs - 1
+      else player2_bombs := !player2_bombs - 1;
+
+      Game.use_bomb opponent_board row col)
+    else
+      let user_move_tuple = Int.of_string user_move |> Board.convert_position in
+
+      (* If a ship was hit, true *)
+      let row = fst user_move_tuple in
+      let col = snd user_move_tuple in
+      Game.player_attack opponent_board row col
+  in
+
   if ship_hit then
     if Game.is_game_over opponent_board then
       Dream.html
         (Template.two_player_game_board
            ~player1_board_status:(Board.board_to_string player1_board)
            ~player2_board_status:(Board.board_to_string player2_board)
+           ~player1_bombs:(Int.to_string !player1_bombs)
+           ~player2_bombs:(Int.to_string !player2_bombs)
            ~turn:!current_turn ~game_over:"true" request)
     else
       Dream.html
         (Template.two_player_game_board
            ~player1_board_status:(Board.board_to_string player1_board)
            ~player2_board_status:(Board.board_to_string player2_board)
+           ~player1_bombs:(Int.to_string !player1_bombs)
+           ~player2_bombs:(Int.to_string !player2_bombs)
            ~turn:!current_turn ~game_over:"false" request)
   else (
     (* if miss, rotate turn *)
@@ -171,22 +208,28 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t) request =
       (Template.two_player_game_board
          ~player1_board_status:(Board.board_to_string player1_board)
          ~player2_board_status:(Board.board_to_string player2_board)
+         ~player1_bombs:(Int.to_string !player1_bombs)
+         ~player2_bombs:(Int.to_string !player2_bombs)
          ~turn:!current_turn ~game_over:"false" request))
 
 let handle_cpu_turn request =
-  let ship_hit = Cpu.cpu_attack player1_board in
+  let ship_hit = Cpu.cpu_attack player1_board player2_bombs in
   if ship_hit then
     if Game.is_game_over player1_board then
       Dream.html
         (Template.single_player_game_board
            ~user_board_status:(Board.board_to_string player1_board)
            ~cpu_board_status:(Board.board_to_string player2_board)
+           ~user_bombs:(Int.to_string !player1_bombs)
+           ~cpu_bombs:(Int.to_string !player2_bombs)
            ~turn:!current_turn ~game_over:"true" request)
     else
       Dream.html
         (Template.single_player_game_board
            ~user_board_status:(Board.board_to_string player1_board)
            ~cpu_board_status:(Board.board_to_string player2_board)
+           ~user_bombs:(Int.to_string !player1_bombs)
+           ~cpu_bombs:(Int.to_string !player2_bombs)
            ~turn:!current_turn ~game_over:"false" request)
   else (
     (* if miss, rotate turn *)
@@ -195,24 +238,50 @@ let handle_cpu_turn request =
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
          ~cpu_board_status:(Board.board_to_string player2_board)
+         ~user_bombs:(Int.to_string !player1_bombs)
+         ~cpu_bombs:(Int.to_string !player2_bombs)
          ~turn:!current_turn ~game_over:"false" request))
 
 (* For single player turn *)
 let handle_user_turn (user_move : string) request =
-  let user_move_int = Int.of_string user_move in
-  let ship_hit = Game.player_attack player2_board user_move_int in
+  let ship_hit =
+    if String.is_substring user_move ~substring:"bomb" && !player1_bombs > 0
+    then (
+      let user_move_tuple =
+        Int.of_string (String.chop_prefix_exn user_move ~prefix:"bomb")
+        |> Board.convert_position
+      in
+      let row = fst user_move_tuple in
+      let col = snd user_move_tuple in
+
+      player1_bombs := !player1_bombs - 1;
+
+      Game.use_bomb player2_board row col)
+    else
+      let user_move_tuple = Int.of_string user_move |> Board.convert_position in
+
+      (* If a ship was hit, true *)
+      let row = fst user_move_tuple in
+      let col = snd user_move_tuple in
+      Game.player_attack player2_board row col
+  in
+
   if ship_hit then
     if Game.is_game_over player2_board then
       Dream.html
         (Template.single_player_game_board
            ~user_board_status:(Board.board_to_string player1_board)
            ~cpu_board_status:(Board.board_to_string player2_board)
+           ~user_bombs:(Int.to_string !player1_bombs)
+           ~cpu_bombs:(Int.to_string !player2_bombs)
            ~turn:!current_turn ~game_over:"true" request)
     else
       Dream.html
         (Template.single_player_game_board
            ~user_board_status:(Board.board_to_string player1_board)
            ~cpu_board_status:(Board.board_to_string player2_board)
+           ~user_bombs:(Int.to_string !player1_bombs)
+           ~cpu_bombs:(Int.to_string !player2_bombs)
            ~turn:!current_turn ~game_over:"false" request)
   else (
     (* if miss, rotate turn *)
@@ -221,6 +290,8 @@ let handle_user_turn (user_move : string) request =
       (Template.single_player_game_board
          ~user_board_status:(Board.board_to_string player1_board)
          ~cpu_board_status:(Board.board_to_string player2_board)
+         ~user_bombs:(Int.to_string !player1_bombs)
+         ~cpu_bombs:(Int.to_string !player2_bombs)
          ~turn:!current_turn ~game_over:"false" request))
 
 let () =
@@ -286,6 +357,8 @@ let () =
                (Template.two_player_game_board
                   ~player1_board_status:(Board.board_to_string player1_board)
                   ~player2_board_status:(Board.board_to_string player2_board)
+                  ~player1_bombs:(Int.to_string !player1_bombs)
+                  ~player2_bombs:(Int.to_string !player2_bombs)
                   ~turn:!current_turn ~game_over:"false" request));
          (* Start out with user turn with a blank message/board status*)
          Dream.post "/player1_turn" (fun request ->
@@ -313,6 +386,8 @@ let () =
                (Template.single_player_game_board
                   ~user_board_status:(Board.board_to_string player1_board)
                   ~cpu_board_status:(Board.board_to_string player2_board)
+                  ~user_bombs:(Int.to_string !player1_bombs)
+                  ~cpu_bombs:(Int.to_string !player2_bombs)
                   ~turn:!current_turn ~game_over:"false" request));
          (* user turn *)
          Dream.post "/user_turn" (fun request ->
@@ -326,7 +401,8 @@ let () =
          Dream.get "/cpu_turn" (fun request ->
              Core_unix.sleep 1;
              handle_cpu_turn request);
-         Dream.get "/reset_board" (fun request -> handle_placement_reset request);
+         Dream.get "/reset_board" (fun request ->
+             handle_placement_reset request);
          Dream.get "/save" (fun request -> handle_save request);
          Dream.get "/static/**" (Dream.static "./static");
        ]

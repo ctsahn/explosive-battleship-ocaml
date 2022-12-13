@@ -1,17 +1,22 @@
 let disable = false; //disable multiple clicks
 let showSaveText = false;
+let bombSet = false;
 async function handleClick(cellid, formid, currentTurn,gameOver) {
 
   // only allow clicks when it is your turn, and make sure a form exists in order for click to occur
   if (((currentTurn.includes("player1") && cellid.includes("player2")) || (currentTurn.includes("player2") && cellid.includes("player1"))) && !disable && document.getElementById(formid) && !gameOver ) {
     document.getElementById(cellid).style.backgroundColor = "red";
+    if (bombSet){
+      
+        document.getElementById(formid.replace("form","input")).value = "bomb" + document.getElementById(formid.replace("form","input")).value;
+      
+      
+    }
     document.getElementById(formid).submit();
     disable = true;
   }
 
 }
-
-
 
 
 function loadColors() {

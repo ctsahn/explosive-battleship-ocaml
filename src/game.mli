@@ -17,7 +17,7 @@ val place_ship : Board.t -> string -> int -> int-> int-> int -> (int, string) re
 
      Return true if a ship was hit, false otherwise.
 *)
-val player_attack : Board.t -> int -> bool
+val player_attack : Board.t -> int -> int -> bool
 
 (*
     Check if a player has sunk all of the opponent's ships. 
@@ -36,13 +36,16 @@ val has_sunk : Board.t -> int -> int -> bool
 *)
 val is_valid_attack: Board.t -> int -> int -> bool
 
+
+val use_bomb: Board.t -> int -> int -> bool 
+
 val cleanse_board: Board.t -> unit
 
-val save_single_player_game : Board.t -> Board.t -> string -> (int * int) Core.Queue.t -> (int * int) Core.Queue.t -> string -> unit
-val save_two_player_game : Board.t -> Board.t -> string -> unit
+val save_single_player_game : Board.t -> Board.t -> int -> int -> string -> (int * int) Core.Queue.t -> (int * int) Core.Queue.t -> string -> unit
+val save_two_player_game : Board.t -> Board.t -> int -> int->string -> unit
 
 (* True if two player game *)
-val load_game : Board.t -> Board.t -> string ref -> (int * int) Core.Queue.t -> (int * int) Core.Queue.t -> string ref ->  bool 
+val load_game : Board.t -> Board.t -> int ref -> int ref -> string ref -> (int * int) Core.Queue.t -> (int * int) Core.Queue.t -> string ref ->  bool 
 
 
 

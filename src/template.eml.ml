@@ -169,7 +169,7 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
   </html>
 
 
-let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~game_over request = 
+let two_player_game_board ~player1_board_status ~player2_board_status ~player1_bombs ~player2_bombs ~turn ~game_over request = 
   <html>
   <head>
   <link rel="stylesheet" href="static/style.css">
@@ -187,7 +187,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~gam
         <td class="light" id=<%s "player1cell"^cell_num %>  onclick=<%s "handleClick('player1cell" ^cell_num^ "','player1form"^cell_num^"'" ^ ",'" ^turn^ "'," ^ game_over ^")" %> >
         <form id=<%s "player1form" ^ cell_num %> method="post" action="/player2_turn">
         <%s! Dream.csrf_tag request %>
-        <input type="hidden" name="player2-move" value=<%s cell_num %> >
+        <input id = <%s "player1input" ^ cell_num %> type="hidden" name="player2-move" value=<%s cell_num %> >
         </form>
         </td>
 %       display_player1_row row (col+1)
@@ -205,7 +205,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~gam
         <td class="light" id=<%s "player2cell"^cell_num %>  onclick=<%s "handleClick('player2cell" ^cell_num^ "','player2form"^cell_num^"'" ^ ",'"^turn^"'," ^ game_over ^ ")" %> >
         <form id=<%s "player2form" ^ cell_num %> method="post" action="/player1_turn">
         <%s! Dream.csrf_tag request %>
-        <input type="hidden" name="player1-move" value=<%s cell_num %> >
+        <input id=<%s "player2input" ^ cell_num %> type="hidden" name="player1-move" value=<%s cell_num %> >
         </form>
         </td>
 %       display_player2_row row (col+1)
@@ -220,6 +220,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~gam
   <h1 id="turn"> <%s turn_display %> </h1>
 
   <h2>Player 1's board</h2>
+  <p>Bombs remaining: <%s player1_bombs %></p>
   <div id="player1-board-status" style="display: none;"><%s player1_board_status %></div>
   <table class="board">
       <tbody>
@@ -266,6 +267,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~gam
       </tbody>
   </table>
   <h2>Player 2's board</h2>
+  <p>Bombs remaining: <%s player2_bombs %></p>
   <div id="player2-board-status" style="display: none;"><%s player2_board_status %></div>
   <table class="board">
   <tbody>
@@ -325,7 +327,13 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~gam
 
          
   </form>
+% if ((turn = "player1" && player1_bombs = "0") ||(turn = "player2" && player2_bombs = "0") ) then begin 
 
+      <button disabled>Bomb</button>
+% end
+% else begin
+      <button onclick="bombSet=true; this.disabled=true;">Bomb</button>
+% end;
 
   <script src= "static/two-player.js">
   
@@ -334,7 +342,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~turn ~gam
   </html>
 
 
-let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_over request = 
+let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~cpu_bombs ~turn ~game_over request = 
 <html>
 <head>
 <link rel="stylesheet" href="static/style.css">
@@ -365,7 +373,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_ov
       <td class="light" id=<%s "cpucell"^cell_num %>  onclick=<%s "handleClick('cpucell" ^cell_num^ "','cpuform"^cell_num^"'," ^game_over^ ")" %> >
       <form id=<%s "cpuform" ^ cell_num %> method="post" action="/user_turn">
       <%s! Dream.csrf_tag request %>
-      <input type="hidden" name="user-move" value=<%s cell_num %> >
+      <input id=<%s "cpuinput" ^ cell_num %> type="hidden" name="user-move" value=<%s cell_num %> >
       </form>
       </td>
 %       display_cpu_row row (col+1)
@@ -390,6 +398,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_ov
 
 
 <h2>User's board</h2>
+<p>Bombs remaining: <%s user_bombs %></p>
 <div id="user-board-status" style="display: none;"><%s user_board_status %></div>
 <table class="board">
       <tbody>
@@ -436,6 +445,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_ov
       </tbody>
 </table>
 <h2>CPU's board</h2>
+<p>Bombs remaining: <%s cpu_bombs %></p>
 <div id="cpu-board-status" style="display: none;"><%s cpu_board_status %></div>
 <table class="board">
 <tbody>
@@ -495,6 +505,13 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~turn ~game_ov
 
          
   </form>
+% if ((turn = "user" && user_bombs = "0") ||(turn = "cpu"  ) )then begin 
+
+      <button disabled>Bomb</button>
+% end
+% else begin
+      <button onclick="bombSet=true; this.disabled=true;">Bomb</button>
+% end;
 
 
 <script src= "static/single-player.js">

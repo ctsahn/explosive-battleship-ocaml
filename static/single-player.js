@@ -1,8 +1,15 @@
 let disable = false; //disable multiple clicks
+let bombSet = false;
 async function handleClick(cellid,formid,gameOver){
     // only allow clicks when it is your turn, and make sure a form exists in order for click to occur
     if(!disable && document.getElementById(formid) && !document.getElementById("cpu-turn") && !gameOver){
       document.getElementById(cellid).style.backgroundColor = "red";
+      if (bombSet){
+      
+        document.getElementById(formid.replace("form","input")).value = "bomb" + document.getElementById(formid.replace("form","input")).value;
+      
+      
+      }
       document.getElementById(formid).submit();
       disable=true;
     }

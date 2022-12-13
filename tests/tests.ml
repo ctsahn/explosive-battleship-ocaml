@@ -118,18 +118,18 @@ let empty_array = Array.make_matrix ~dimx:10 ~dimy:10 Empty
 let ship_full_array = Array.make_matrix ~dimx:10 ~dimy:10 Ship
 
 let test_attack _ =
-  assert_equal true @@ Game.player_attack ship_full_array 4;
-  assert_equal false @@ Game.player_attack empty_array 4
+  assert_equal true @@ Game.player_attack ship_full_array 4 4;
+  assert_equal false @@ Game.player_attack empty_array 4 4
 
 let test_cpu_attack _ =
-  assert_equal false @@ Cpu.cpu_attack empty_array;
+  assert_equal false @@ Cpu.cpu_attack empty_array (ref 0);
   assert_equal true @@ Queue.is_empty Cpu.horz_attack_queue;
   assert_equal true @@ Queue.is_empty Cpu.vert_attack_queue;
-  assert_equal true @@ Cpu.cpu_attack ship_full_array;
+  assert_equal true @@ Cpu.cpu_attack ship_full_array (ref 0);
   assert_equal "" @@ !Cpu.attack_direction;
   assert_equal false @@ Queue.is_empty Cpu.horz_attack_queue;
   assert_equal false @@ Queue.is_empty Cpu.vert_attack_queue;
-  assert_equal true @@ Cpu.cpu_attack ship_full_array;
+  assert_equal true @@ Cpu.cpu_attack ship_full_array (ref 0);
   assert_equal true
   @@ (String.( = ) !Cpu.attack_direction "horizontal"
      || String.( = ) !Cpu.attack_direction "vertical")
@@ -216,20 +216,23 @@ let test_save_load_two_player_game _ =
   let player2_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
   let _ = Game.place_ship player2_board "" 6 1 8 1 in
 
-  Game.save_two_player_game player1_board player2_board "player1";
+  Game.save_two_player_game player1_board player2_board 3 2 "player1";
 
   let new_player1_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
   let new_player2_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-
+  let loaded_player1_bombs = ref 0 in
+  let loaded_player2_bombs = ref 0 in
   let loaded_turn = ref "" in
   let res =
-    Game.load_game new_player1_board new_player2_board loaded_turn
+    Game.load_game new_player1_board new_player2_board loaded_player1_bombs  loaded_player2_bombs loaded_turn
       (Queue.create ()) (Queue.create ()) (ref "")
   in
 
   assert_equal true @@ res;
   assert_equal player1_board @@ new_player1_board;
   assert_equal player2_board @@ new_player2_board;
+  assert_equal 3 @@ !loaded_player1_bombs;
+  assert_equal 2 @@ !loaded_player2_bombs;
   assert_equal "player1" @@ !loaded_turn
 
 let test_save_load_single_player_game _ =
@@ -246,7 +249,7 @@ let test_save_load_single_player_game _ =
   Queue.enqueue vert_queue (8, 8);
   Queue.enqueue vert_queue (6, 8);
 
-  Game.save_single_player_game user_board cpu_board "user" horz_queue vert_queue
+  Game.save_single_player_game user_board cpu_board 3 2 "user" horz_queue vert_queue
     "vertical";
 
   let new_user_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
@@ -256,8 +259,10 @@ let test_save_load_single_player_game _ =
 
   let loaded_turn = ref "" in
   let loaded_dir = ref "" in
+  let loaded_user_bombs = ref 0 in
+  let loaded_cpu_bombs = ref 0 in
   let res =
-    Game.load_game new_user_board new_cpu_board loaded_turn new_horz_queue
+    Game.load_game new_user_board new_cpu_board loaded_user_bombs loaded_cpu_bombs loaded_turn new_horz_queue
       new_vert_queue loaded_dir
   in
 
@@ -268,6 +273,21 @@ let test_save_load_single_player_game _ =
   assert_equal (Queue.to_list horz_queue) @@ Queue.to_list new_horz_queue;
   assert_equal (Queue.to_list vert_queue) @@ Queue.to_list new_vert_queue;
   assert_equal "vertical" @@ !loaded_dir
+
+let test_use_bomb _ =
+  let arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
+  let res = Game.use_bomb arr 1 1 in
+  assert_equal false @@ res;
+  assert_equal 9
+  @@ Array.fold arr ~init:0 ~f:(fun tot arr_row ->
+         tot + Array.count arr_row ~f:(fun e -> equal_status e Miss));
+
+  let arr2 = Array.make_matrix ~dimx:3 ~dimy:3 Ship in
+  let res2 = Game.use_bomb arr2 1 1 in
+  assert_equal true @@ res2;
+  assert_equal 9
+  @@ Array.fold arr2 ~init:0 ~f:(fun tot arr_row ->
+         tot + Array.count arr_row ~f:(fun e -> equal_status e ShipSunken))
 
 let game_tests =
   "Game"
@@ -284,6 +304,7 @@ let game_tests =
          "save_two_player_game, load_game" >:: test_save_load_two_player_game;
          "save_single_player_game, load_game"
          >:: test_save_load_single_player_game;
+         "use_bomb" >:: test_use_bomb;
        ]
 
 let series = "Battleship Tests" >::: [ board_tests; game_tests ]

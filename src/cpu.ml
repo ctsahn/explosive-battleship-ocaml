@@ -1,7 +1,5 @@
 open Core
 
-
-
 (* Possible horizontal searches for the CPU, after a hit *)
 let horz_attack_queue = Queue.create ()
 
@@ -43,14 +41,14 @@ let rec place_cpu_ships (board : Board.t) (ship_size : int) : unit =
       | Error _ -> place_cpu_ships board ship_size
     else if dir = 2 && place_col + (ship_size - 1) < board_length then
       match
-      Game.place_ship board "" place_row place_row place_col
+        Game.place_ship board "" place_row place_row place_col
           (place_col + (ship_size - 1))
       with
       | Ok _ -> place_cpu_ships board (ship_size - 1)
       | Error _ -> place_cpu_ships board ship_size
     else if dir = 3 && place_col - (ship_size - 1) >= 0 then
       match
-      Game.place_ship board "" place_row place_row place_col
+        Game.place_ship board "" place_row place_row place_col
           (place_col - (ship_size - 1))
       with
       | Ok _ -> place_cpu_ships board (ship_size - 1)
@@ -112,14 +110,48 @@ let remove_from_queue (queue : (int * int) Queue.t) (coord : int * int) : unit =
   Queue.filter_inplace queue ~f:(fun x ->
       match x with row, col -> row <> fst coord || col <> snd coord)
 
-let cpu_attack (board : Board.t) : bool =
+let cpu_use_bomb (board : Board.t) (row : int) (col : int) =
+  let hit_queue = Queue.create () in
+
+  Queue.enqueue hit_queue (attack_given_coords board row col);
+  if Game.is_valid_attack board row (col - 1) then
+    Queue.enqueue hit_queue (attack_given_coords board row (col - 1));
+  if Game.is_valid_attack board (row - 1) (col - 1) then
+    Queue.enqueue hit_queue (attack_given_coords board (row - 1) (col - 1));
+  if Game.is_valid_attack board (row + 1) (col - 1) then
+    Queue.enqueue hit_queue (attack_given_coords board (row + 1) (col - 1));
+
+  if Game.is_valid_attack board (row + 1) col then
+    Queue.enqueue hit_queue (attack_given_coords board (row + 1) col);
+  if Game.is_valid_attack board (row - 1) col then
+    Queue.enqueue hit_queue (attack_given_coords board (row - 1) col);
+
+  if Game.is_valid_attack board (row + 1) (col + 1) then
+    Queue.enqueue hit_queue (attack_given_coords board (row + 1) (col + 1));
+  if Game.is_valid_attack board row (col + 1) then
+    Queue.enqueue hit_queue (attack_given_coords board row (col + 1));
+  if Game.is_valid_attack board (row - 1) (col + 1) then
+    Queue.enqueue hit_queue (attack_given_coords board (row - 1) (col + 1));
+
+  (* filter out everything that is not a valid attack after the bomb attacks *)
+  Queue.filter_inplace horz_attack_queue ~f:(fun tup ->
+      Game.is_valid_attack board (fst tup) (snd tup));
+  Queue.filter_inplace vert_attack_queue ~f:(fun tup ->
+      Game.is_valid_attack board (fst tup) (snd tup));
+  Queue.fold hit_queue ~init:false ~f:(fun accum b -> accum || b)
+
+let cpu_attack (board : Board.t) (bombs_remaining : int ref) : bool =
   if Queue.is_empty vert_attack_queue && Queue.is_empty horz_attack_queue then
     (* No smart moves - just attack randomly *)
     let attack_target = find_valid_attack board in
     let attack_row = fst attack_target in
     let attack_col = snd attack_target in
 
-    attack_given_coords board attack_row attack_col
+    if !bombs_remaining > 0 && Random.int 5 = 0 then (
+      bombs_remaining := !bombs_remaining - 1;
+
+      cpu_use_bomb board attack_row attack_col)
+    else attack_given_coords board attack_row attack_col
   else if Queue.is_empty vert_attack_queue then (
     (* CPU has no vertical moves to make, but does have smart horizontal moves available *)
 

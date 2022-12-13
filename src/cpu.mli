@@ -8,7 +8,7 @@ val attack_direction : string ref
 
     Return true if a ship was hit, false otherwise.
 *)
-    val cpu_attack : Board.t -> bool
+    val cpu_attack : Board.t ->int ref-> bool
 
 (*
     Randomly place CPU ships on a board.
