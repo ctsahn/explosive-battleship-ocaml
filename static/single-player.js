@@ -51,14 +51,22 @@ function loadColors(){
           document.getElementById("usercell" + i).style.color = "red";
           document.getElementById("usercell" + i).style.borderColor = "red";
         } 
+
+        else if(userBoardStatus[i]==5){
+          document.getElementById("usercell" + i).style.backgroundColor = "gray";
+        } 
+        else if(userBoardStatus[i]==6){
+          document.getElementById("usercell" + i).style.backgroundColor = "black";
+          document.getElementById("usercell" + i).innerHTML = "";
+        } 
         // miss
         if(cpuBoardStatus[i] == 1){
           document.getElementById("cpucell" + i).innerHTML= "•";
         }
-        // ship: for testing only, delete later TODO
+       /* // ship: for testing only, delete later TODO
         else if(cpuBoardStatus[i] == 2){
           document.getElementById("cpucell" + i).style.backgroundColor = "blue";
-        }
+        }*/
         // hit
         else if(cpuBoardStatus[i] == 3){
           
@@ -71,6 +79,14 @@ function loadColors(){
           document.getElementById("cpucell" + i).style.backgroundColor = "red";
           document.getElementById("cpucell" + i).style.color = "red";
           document.getElementById("cpucell" + i).style.borderColor = "red";
+        } 
+        /*
+        else if(cpuBoardStatus[i]==5){
+          document.getElementById("cpucell" + i).style.backgroundColor = "gray";
+        } */
+        else if(cpuBoardStatus[i]==6){
+          document.getElementById("cpucell" + i).style.backgroundColor = "black";
+          document.getElementById("cpucell" + i).innerHTML = "";
         } 
       
     }

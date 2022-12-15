@@ -41,7 +41,7 @@ let handle_ship_placement (player_board : Board.t)
         let sorted_ship_sizes =
           List.sort (String.to_list !player_ship_status) ~compare:Char.compare
         in
-        let expected_ship_sizes = [ '2'; '3'; '4'; '5' ] in
+        let expected_ship_sizes = [ '1'; '2'; '3'; '4'; '5' ] in
 
         if List.equal Char.equal sorted_ship_sizes expected_ship_sizes then
           Dream.html
@@ -110,8 +110,9 @@ type single_player_save = {
 let handle_save request =
   (* Save a single player game *)
   if String.( = ) !current_turn "user" || String.( = ) !current_turn "cpu" then (
-    Game.save_single_player_game player1_board player2_board !player1_bombs !player2_bombs !current_turn
-      Cpu.horz_attack_queue Cpu.vert_attack_queue !Cpu.attack_direction;
+    Game.save_single_player_game player1_board player2_board !player1_bombs
+      !player2_bombs !current_turn Cpu.horz_attack_queue Cpu.vert_attack_queue
+      !Cpu.attack_direction;
 
     Dream.html
       (Template.single_player_game_board
@@ -121,7 +122,8 @@ let handle_save request =
          ~cpu_bombs:(Int.to_string !player2_bombs)
          ~turn:!current_turn ~game_over:"false" request))
   else (
-    Game.save_two_player_game player1_board player2_board !player1_bombs !player2_bombs !current_turn;
+    Game.save_two_player_game player1_board player2_board !player1_bombs
+      !player2_bombs !current_turn;
     Dream.html
       (Template.two_player_game_board
          ~player1_board_status:(Board.board_to_string player1_board)
@@ -132,8 +134,9 @@ let handle_save request =
 
 let handle_load request =
   let load_result =
-    Game.load_game player1_board player2_board player1_bombs player2_bombs current_turn
-      Cpu.horz_attack_queue Cpu.vert_attack_queue Cpu.attack_direction
+    Game.load_game player1_board player2_board player1_bombs player2_bombs
+      current_turn Cpu.horz_attack_queue Cpu.vert_attack_queue
+      Cpu.attack_direction
   in
 
   if load_result then
@@ -154,7 +157,8 @@ let handle_load request =
          ~turn:!current_turn ~game_over:"false" request)
 
 (* For 2-player turns *)
-let handle_player_turn (user_move : string) (opponent_board : Board.t) request =
+let handle_player_turn (user_move : string) (opponent_board : Board.t)
+    (penalty_board : Board.t) request =
   let ship_hit =
     if
       String.is_substring user_move ~substring:"bomb"
@@ -172,14 +176,14 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t) request =
         player1_bombs := !player1_bombs - 1
       else player2_bombs := !player2_bombs - 1;
 
-      Game.use_bomb opponent_board row col)
+      Player.use_bomb opponent_board penalty_board row col false)
     else
       let user_move_tuple = Int.of_string user_move |> Board.convert_position in
 
       (* If a ship was hit, true *)
       let row = fst user_move_tuple in
       let col = snd user_move_tuple in
-      Game.player_attack opponent_board row col
+      Player.player_attack opponent_board penalty_board row col false
   in
 
   if ship_hit then
@@ -213,7 +217,7 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t) request =
          ~turn:!current_turn ~game_over:"false" request))
 
 let handle_cpu_turn request =
-  let ship_hit = Cpu.cpu_attack player1_board player2_bombs in
+  let ship_hit = Cpu.cpu_attack player1_board player2_board player2_bombs in
   if ship_hit then
     if Game.is_game_over player1_board then
       Dream.html
@@ -256,14 +260,14 @@ let handle_user_turn (user_move : string) request =
 
       player1_bombs := !player1_bombs - 1;
 
-      Game.use_bomb player2_board row col)
+      Player.use_bomb player2_board player1_board row col true)
     else
       let user_move_tuple = Int.of_string user_move |> Board.convert_position in
 
       (* If a ship was hit, true *)
       let row = fst user_move_tuple in
       let col = snd user_move_tuple in
-      Game.player_attack player2_board row col
+      Player.player_attack player2_board player1_board row col true
   in
 
   if ship_hit then
@@ -366,18 +370,19 @@ let () =
              | `Ok [ ("player1-move", message) ] ->
                  Core_unix.sleep 1;
                  (* short delay so we can actually see the move being made *)
-                 handle_player_turn message player2_board request
+                 handle_player_turn message player2_board player1_board request
              | _ -> Dream.empty `Bad_Request);
          Dream.post "/player2_turn" (fun request ->
              match%lwt Dream.form request with
              | `Ok [ ("player2-move", message) ] ->
                  Core_unix.sleep 1;
                  (* short delay so we can actually see the move being made *)
-                 handle_player_turn message player1_board request
+                 handle_player_turn message player1_board player2_board request
              | _ -> Dream.empty `Bad_Request);
          (* play game - single player *)
          Dream.get "/play_single_player" (fun request ->
              Game.cleanse_board player1_board;
+             Board.reset player2_board;
              Cpu.place_cpu_ships player2_board 5;
              Game.cleanse_board player2_board;
 

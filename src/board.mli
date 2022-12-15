@@ -1,4 +1,4 @@
-type status = Empty | Miss | Ship | ShipHit | ShipSunken [@@deriving equal]
+type status = Empty | Miss | Ship | ShipHit | ShipSunken | Mine| MineHit [@@deriving equal]
 
 (* Treat board as a 2D array *)
 type t = status array array

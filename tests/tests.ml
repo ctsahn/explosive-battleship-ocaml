@@ -118,18 +118,18 @@ let empty_array = Array.make_matrix ~dimx:10 ~dimy:10 Empty
 let ship_full_array = Array.make_matrix ~dimx:10 ~dimy:10 Ship
 
 let test_attack _ =
-  assert_equal true @@ Game.player_attack ship_full_array 4 4;
-  assert_equal false @@ Game.player_attack empty_array 4 4
+  assert_equal true @@ Player.player_attack ship_full_array empty_array 4 4 false;
+  assert_equal false @@ Player.player_attack empty_array empty_array 4 4 false
 
 let test_cpu_attack _ =
-  assert_equal false @@ Cpu.cpu_attack empty_array (ref 0);
+  assert_equal false @@ Cpu.cpu_attack empty_array empty_array (ref 0);
   assert_equal true @@ Queue.is_empty Cpu.horz_attack_queue;
   assert_equal true @@ Queue.is_empty Cpu.vert_attack_queue;
-  assert_equal true @@ Cpu.cpu_attack ship_full_array (ref 0);
+  assert_equal true @@ Cpu.cpu_attack ship_full_array empty_array (ref 0);
   assert_equal "" @@ !Cpu.attack_direction;
   assert_equal false @@ Queue.is_empty Cpu.horz_attack_queue;
   assert_equal false @@ Queue.is_empty Cpu.vert_attack_queue;
-  assert_equal true @@ Cpu.cpu_attack ship_full_array (ref 0);
+  assert_equal true @@ Cpu.cpu_attack ship_full_array empty_array (ref 0);
   assert_equal true
   @@ (String.( = ) !Cpu.attack_direction "horizontal"
      || String.( = ) !Cpu.attack_direction "vertical")
@@ -276,19 +276,18 @@ let test_save_load_single_player_game _ =
 
 let test_use_bomb _ =
   let arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
-  let res = Game.use_bomb arr 1 1 in
+  let res = Player.use_bomb arr empty_array 1 1 false in
   assert_equal false @@ res;
   assert_equal 9
   @@ Array.fold arr ~init:0 ~f:(fun tot arr_row ->
          tot + Array.count arr_row ~f:(fun e -> equal_status e Miss));
 
   let arr2 = Array.make_matrix ~dimx:3 ~dimy:3 Ship in
-  let res2 = Game.use_bomb arr2 1 1 in
+  let res2 = Player.use_bomb arr2 empty_array 1 1 false in
   assert_equal true @@ res2;
   assert_equal 9
   @@ Array.fold arr2 ~init:0 ~f:(fun tot arr_row ->
          tot + Array.count arr_row ~f:(fun e -> equal_status e ShipSunken))
-
 let game_tests =
   "Game"
   >: test_list

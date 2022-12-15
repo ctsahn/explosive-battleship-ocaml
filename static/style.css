@@ -3,3 +3,11 @@
 .board td { border: 1px solid; width: 2em; height: 2em; text-align: center; }
 .board .light { background: rgb(255, 255, 255); }
 .board .light:hover { background: rgb(64, 200, 200); }
+* {
+    box-sizing: border-box;
+  }
+.column {
+    float: left;
+    padding: 25px;
+  }
+  

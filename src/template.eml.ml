@@ -70,6 +70,7 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
   <h2 id="length4">4<h2>
   <h2 id="length3">3<h2>
   <h2 id="length2">2<h2>
+  <h2 id="length1">Mine<h2>
 
 
 
@@ -219,8 +220,9 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
 %       else "Player 2's turn!" in
   <h1 id="turn"> <%s turn_display %> </h1>
 
+  <div class="column">
   <h2>Player 1's board</h2>
-  <p>Bombs remaining: <%s player1_bombs %></p>
+  <p>Player 1's remaining bombs: <%s player1_bombs %></p>
   <div id="player1-board-status" style="display: none;"><%s player1_board_status %></div>
   <table class="board">
       <tbody>
@@ -266,8 +268,10 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
 
       </tbody>
   </table>
+  </div>
+  <div class="column">
   <h2>Player 2's board</h2>
-  <p>Bombs remaining: <%s player2_bombs %></p>
+  <p>Player 2's remaining bombs: <%s player2_bombs %></p>
   <div id="player2-board-status" style="display: none;"><%s player2_board_status %></div>
   <table class="board">
   <tbody>
@@ -313,6 +317,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
 
   </tbody>
   </table>
+  </div>
 
   <form action="/save" method="get">
       
@@ -327,7 +332,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
 
          
   </form>
-% if ((turn = "player1" && player1_bombs = "0") ||(turn = "player2" && player2_bombs = "0") ) then begin 
+% if ((turn = "player1" && player1_bombs = "0") ||(turn = "player2" && player2_bombs = "0") || (game_over = "true")) then begin 
 
       <button disabled>Bomb</button>
 % end
@@ -396,10 +401,11 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 % end; 
 
 
-
+<div class="column">
 <h2>User's board</h2>
-<p>Bombs remaining: <%s user_bombs %></p>
+<p>User's remaining bombs: <%s user_bombs %></p>
 <div id="user-board-status" style="display: none;"><%s user_board_status %></div>
+
 <table class="board">
       <tbody>
       <tr>
@@ -444,8 +450,10 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 
       </tbody>
 </table>
+</div>
+<div class="column">
 <h2>CPU's board</h2>
-<p>Bombs remaining: <%s cpu_bombs %></p>
+<p>CPU's remaining bombs: <%s cpu_bombs %></p>
 <div id="cpu-board-status" style="display: none;"><%s cpu_board_status %></div>
 <table class="board">
 <tbody>
@@ -491,7 +499,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 
 </tbody>
 </table>
-
+</div>
 <form action="/save" method="get">
       
 
@@ -505,7 +513,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 
          
   </form>
-% if ((turn = "user" && user_bombs = "0") ||(turn = "cpu"  ) )then begin 
+% if ((turn = "user" && user_bombs = "0") ||(turn = "cpu"  )  || (game_over = "true")) then begin 
 
       <button disabled>Bomb</button>
 % end

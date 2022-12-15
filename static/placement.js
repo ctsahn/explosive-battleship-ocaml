@@ -23,6 +23,10 @@ function loadColors() {
             document.getElementById("usercell" + i).style.backgroundColor = "lightgray";
             document.getElementById("usercell" + i).innerHTML = "";
         }
+        if (userBoardStatus[i] == 5) {
+            document.getElementById("usercell" + i).style.backgroundColor = "black";
+            document.getElementById("usercell" + i).innerHTML = "";
+        }
     }
 
     // highlight lengths of previous ships you've placed

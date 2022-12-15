@@ -1,5 +1,4 @@
 let disable = false; //disable multiple clicks
-let showSaveText = false;
 let bombSet = false;
 async function handleClick(cellid, formid, currentTurn,gameOver) {
 
@@ -24,12 +23,6 @@ function loadColors() {
   let player1BoardStatus = document.getElementById("player1-board-status").innerHTML;
   let player2BoardStatus = document.getElementById("player2-board-status").innerHTML;
 
-
-
-  if(showSaveText){
-    document.getElementById("save-status").innerHTML = "Game saved to save.txt!";
-    showSaveText = false;
-  }
   for (let i = 0; i < 100; i++) {
 
     // miss
@@ -54,6 +47,18 @@ function loadColors() {
       document.getElementById("player1cell" + i).style.borderColor = "red";
     }
 
+    // sunk
+    else if (player1BoardStatus[i] == 5) {
+      document.getElementById("player1cell" + i).style.backgroundColor = "gray";
+
+      
+    }
+    else if (player1BoardStatus[i] == 6) {
+      document.getElementById("player1cell" + i).style.backgroundColor = "black";
+      document.getElementById("player1cell" + i).innerHTML = "";
+      
+    }
+
     // miss
     if (player2BoardStatus[i] == 1) {
       document.getElementById("player2cell" + i).innerHTML = "•";
@@ -74,6 +79,16 @@ function loadColors() {
       document.getElementById("player2cell" + i).style.backgroundColor = "red";
       document.getElementById("player2cell" + i).style.color = "red";
       document.getElementById("player2cell" + i).style.borderColor = "red";
+    }
+    else if (player2BoardStatus[i] == 5) {
+      document.getElementById("player2cell" + i).style.backgroundColor = "gray";
+      
+      
+    }
+    else if (player2BoardStatus[i] == 6) {
+      document.getElementById("player2cell" + i).style.backgroundColor = "black";
+      document.getElementById("player2cell" + i).innerHTML = "";
+      
     }
 
   }

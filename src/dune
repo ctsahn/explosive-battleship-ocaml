@@ -3,6 +3,8 @@
   (modules board)
   (libraries core)
   (preprocess (pps ppx_jane bisect_ppx) ))
+
+
 (library
   (name game)
   (modules game)
@@ -15,11 +17,16 @@
   (libraries board core game)
   (preprocess (pps ppx_jane bisect_ppx)))
 
+(library
+  (name player)
+  (modules player)
+  (libraries core board game cpu)
+  (preprocess (pps ppx_jane bisect_ppx) ))
 (executable
  (name server)
  (modules server template )
  
- (libraries dream core core_unix board game cpu  )
+ (libraries dream core core_unix board game cpu player  )
  (preprocess (pps lwt_ppx  ))) 
 
  (rule

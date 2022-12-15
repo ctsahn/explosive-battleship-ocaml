@@ -78,10 +78,13 @@ let place_ship (board : Board.t) (placed_ships : string) (row1 : int)
     (* Place the horizontal ship *)
     if not (check_left_right board row1 col1 col2) then Error touching_error
     else if ship_size > 5 then Error too_big_error
-    else if ship_size < 2 then Error too_small_error
     else if
       String.is_substring placed_ships ~substring:(Int.to_string ship_size)
     then Error repeat_error
+    else if ship_size = 1 then (
+      board.(row1).(col1) <- Mine;
+      create_miss_radius board row1 col1;
+      Ok 1)
     else (
       Array.fill board.(row1) ~pos:col1 ~len:(col2 - col1 + 1) Ship;
 
@@ -112,7 +115,10 @@ let cleanse_board (board : Board.t) : unit =
   (* Only keep ships on the board, everything else Empty *)
   for r = 0 to Array.length board - 1 do
     for c = 0 to Array.length board.(r) - 1 do
-      if not (equal_status board.(r).(c) Ship) then board.(r).(c) <- Empty
+      if
+        (not (equal_status board.(r).(c) Ship))
+        && not (equal_status board.(r).(c) Mine)
+      then board.(r).(c) <- Empty
     done
   done
 
@@ -212,59 +218,41 @@ let has_sunk (board : Board.t) (row : int) (col : int) : bool =
     | _, _ -> false
   else false
 
-(* Player attack *)
-let player_attack (board : Board.t) (row : int) (col : int) : bool =
-  (* hit *)
-  if Board.equal_status Board.Ship board.(row).(col) then (
-    board.(row).(col) <- Board.ShipHit;
-    let _ = has_sunk board row col in
-    (* check if the hit ship has sunk - however, we have no use for the returned bool *)
-    true)
-  else (
-    board.(row).(col) <- Board.Miss;
-    false)
-
 let is_valid_attack (board : Board.t) (row : int) (col : int) : bool =
   (* Must not be out of bounds, and should not have been fired upon *)
   row >= 0 && col >= 0
   && row < Array.length board
   && col < Array.length board
   && (Board.equal_status Board.Empty board.(row).(col)
-     || Board.equal_status Board.Ship board.(row).(col))
+     || Board.equal_status Board.Ship board.(row).(col)
+     || Board.equal_status Board.Mine board.(row).(col))
 
-let use_bomb (board : Board.t) (row : int) (col : int) =
-  let hit_queue = Queue.create () in
+let rec find_ship (board : Board.t) : int * int =
+  let board_length = Array.length board in
 
-  Queue.enqueue hit_queue (player_attack board row col);
-  if is_valid_attack board row (col - 1) then
-    Queue.enqueue hit_queue (player_attack board row (col - 1));
-  if is_valid_attack board (row - 1) (col - 1) then
-    Queue.enqueue hit_queue (player_attack board (row - 1) (col - 1));
-  if is_valid_attack board (row + 1) (col - 1) then
-    Queue.enqueue hit_queue (player_attack board (row + 1) (col - 1));
+  let potential_row = Random.int board_length in
+  let potential_col = Random.int board_length in
 
-  if is_valid_attack board (row + 1) col then
-    Queue.enqueue hit_queue (player_attack board (row + 1) col);
-  if is_valid_attack board (row - 1) col then
-    Queue.enqueue hit_queue (player_attack board (row - 1) col);
+  if Board.equal_status Board.Ship board.(potential_row).(potential_col) then
+    (potential_row, potential_col)
+  else find_ship board
 
-  if is_valid_attack board (row + 1) (col + 1) then
-    Queue.enqueue hit_queue (player_attack board (row + 1) (col + 1));
-  if is_valid_attack board row (col + 1) then
-    Queue.enqueue hit_queue (player_attack board row (col + 1));
-  if is_valid_attack board (row - 1) (col + 1) then
-    Queue.enqueue hit_queue (player_attack board (row - 1) (col + 1));
+(* Player attack *)
 
-  Queue.fold hit_queue ~init:false ~f: (fun accum b -> accum || b) 
-
-type two_player_save = { player1 : string; player2 : string; player1_bombs: int; player2_bombs: int; turn : string }
+type two_player_save = {
+  player1 : string;
+  player2 : string;
+  player1_bombs : int;
+  player2_bombs : int;
+  turn : string;
+}
 [@@deriving yojson { exn = true }]
 
 type single_player_save = {
   user : string;
   cpu : string;
-  user_bombs: int;
-  cpu_bombs:int; 
+  user_bombs : int;
+  cpu_bombs : int;
   turn : string;
   cpu_horz_queue : string;
   cpu_vert_queue : string;
@@ -272,8 +260,9 @@ type single_player_save = {
 }
 [@@deriving yojson { exn = true }]
 
-let save_single_player_game (user_board : Board.t) (cpu_board : Board.t) (user_bombs:int) (cpu_bombs:int)
-    (current_turn : string) (cpu_horz_queue : (int * int) Core.Queue.t)
+let save_single_player_game (user_board : Board.t) (cpu_board : Board.t)
+    (user_bombs : int) (cpu_bombs : int) (current_turn : string)
+    (cpu_horz_queue : (int * int) Core.Queue.t)
     (cpu_vert_queue : (int * int) Core.Queue.t) (cpu_attack_direction : string)
     =
   let tuple_to_string (tup : int * int) =
@@ -284,8 +273,8 @@ let save_single_player_game (user_board : Board.t) (cpu_board : Board.t) (user_b
     {
       user = Board.board_to_string user_board;
       cpu = Board.board_to_string cpu_board;
-      user_bombs =  user_bombs;
-      cpu_bombs =  cpu_bombs;
+      user_bombs;
+      cpu_bombs;
       turn = current_turn;
       cpu_horz_queue =
         List.to_string ~f:tuple_to_string (Queue.to_list cpu_horz_queue);
@@ -300,15 +289,14 @@ let save_single_player_game (user_board : Board.t) (cpu_board : Board.t) (user_b
   in
   Out_channel.write_all "saved.txt" ~data:out_str
 
-let save_two_player_game (player1_board : Board.t) (player2_board : Board.t) (player1_bombs: int ) (player2_bombs:int)
-    (current_turn : string) =
+let save_two_player_game (player1_board : Board.t) (player2_board : Board.t)
+    (player1_bombs : int) (player2_bombs : int) (current_turn : string) =
   let save_states =
     {
       player1 = Board.board_to_string player1_board;
       player2 = Board.board_to_string player2_board;
-      player1_bombs = player1_bombs;
-      player2_bombs = player2_bombs;
-
+      player1_bombs;
+      player2_bombs;
       turn = current_turn;
     }
   in
@@ -316,8 +304,9 @@ let save_two_player_game (player1_board : Board.t) (player2_board : Board.t) (pl
     two_player_save_to_yojson save_states |> Yojson.Safe.to_string
   in
   Out_channel.write_all "saved.txt" ~data:out_str
- 
-let load_game (player1_board : Board.t) (player2_board : Board.t) (player1_bombs: int ref) (player2_bombs: int ref)
+
+let load_game (player1_board : Board.t) (player2_board : Board.t)
+    (player1_bombs : int ref) (player2_bombs : int ref)
     (current_turn : string ref) (cpu_horz_queue : (int * int) Core.Queue.t)
     (cpu_vert_queue : (int * int) Core.Queue.t)
     (cpu_attack_direction : string ref) : bool =
@@ -328,11 +317,11 @@ let load_game (player1_board : Board.t) (player2_board : Board.t) (player1_bombs
   match record with
   | Ok two_player_record ->
       current_turn := two_player_record.turn;
-      player1_bombs:= two_player_record.player1_bombs;
-      player2_bombs:= two_player_record.player2_bombs;
+      player1_bombs := two_player_record.player1_bombs;
+      player2_bombs := two_player_record.player2_bombs;
       Board.populate_board player1_board two_player_record.player1;
       Board.populate_board player2_board two_player_record.player2;
-      
+
       true
   (* Error thrown, so must be single player record *)
   | Error _ ->
@@ -357,8 +346,8 @@ let load_game (player1_board : Board.t) (player2_board : Board.t) (player1_bombs
       in
       let single_player_record = single_player_save_of_yojson_exn load_json in
       current_turn := single_player_record.turn;
-      player1_bombs:=single_player_record.user_bombs;
-      player2_bombs:=single_player_record.cpu_bombs;
+      player1_bombs := single_player_record.user_bombs;
+      player2_bombs := single_player_record.cpu_bombs;
       Board.populate_board player1_board single_player_record.user;
       Board.populate_board player2_board single_player_record.cpu;
       cpu_attack_direction := single_player_record.cpu_direction;
