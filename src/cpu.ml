@@ -210,6 +210,9 @@ let cpu_attack (user_board : Board.t) (cpu_board : Board.t)
     attack_direction := "vertical";
 
     attack_given_coords user_board cpu_board attack_row attack_col)
+
+
+    (* Both horizontal and vertical queues are not empty, so we have possible squares to attack in both ways. Determine the attack direction by using the current direction.*)
   else if String.( = ) !attack_direction "vertical" then (
     (* Attack direction is vertical, so make vertical moves *)
     let attack_target =
@@ -234,7 +237,7 @@ let cpu_attack (user_board : Board.t) (cpu_board : Board.t)
 
     attack_given_coords user_board cpu_board attack_row attack_col)
   else if Random.int 2 = 1 then (
-    (* Both horizontal and vertical queues are not empty, so we have possible squares to attack in both ways*)
+    
     (* Randomly pick horizontal attack direction *)
     attack_direction := "horizontal";
     let attack_target =
