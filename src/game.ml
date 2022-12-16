@@ -12,10 +12,9 @@ let too_big_error = "big"
 (* Create a radius of "Miss" squares when we sink a ship or place a ship, as we know ships cannot touch each other *)
 let create_miss_radius (board : Board.t) (row : int) (col : int) : unit =
   (* Fill all 8 squares around a square *)
-  if col - 1 >= 0 && equal_status board.(row).(col - 1) Empty then
-    board.(row).(col - 1) <- Miss;
-  if
-    row - 1 >= 0 && col - 1 >= 0 && equal_status board.(row - 1).(col - 1) Empty
+  if col - 1 >= 0 && equal_status board.(row).(col - 1) Empty 
+  then board.(row).(col - 1) <- Miss;
+  if row - 1 >= 0 && col - 1 >= 0 && equal_status board.(row - 1).(col - 1) Empty
   then board.(row - 1).(col - 1) <- Miss;
   if
     row + 1 < Array.length board
@@ -36,66 +35,57 @@ let create_miss_radius (board : Board.t) (row : int) (col : int) : unit =
   then board.(row + 1).(col + 1) <- Miss;
   if row + 1 < Array.length board && equal_status board.(row + 1).(col) Empty
   then board.(row + 1).(col) <- Miss;
-  if row - 1 >= 0 && equal_status board.(row - 1).(col) Empty then
-    board.(row - 1).(col) <- Miss
+  if row - 1 >= 0 && equal_status board.(row - 1).(col) Empty 
+  then board.(row - 1).(col) <- Miss
 
-let rec check_left_right (board : Board.t) (row : int) (col1 : int) (col2 : int)
-    : bool =
+let rec check_left_right (board : Board.t) (row : int) (col1 : int) (col2 : int) : bool =
   (* Check horizontally if there already is a ship placed where the new ship will go. *)
   if col1 > col2 then true
-  else if equal_status board.(row).(col1) Ship then false
-    (* overlapping other ship *)
-  else if equal_status board.(row).(col1) Miss then false
-    (* too close to other ships *)
+  else if equal_status board.(row).(col1) Ship then false (* overlapping other ship *)
+  else if equal_status board.(row).(col1) Miss then false (* too close to other ships *)
   else check_left_right board row (col1 + 1) col2
 
-let rec check_above_below (board : Board.t) (row1 : int) (row2 : int)
-    (col : int) : bool =
+let rec check_above_below (board : Board.t) (row1 : int) (row2 : int) (col : int) : bool =
   (* Check vertically if there already is a ship placed where the new ship will go. *)
   if row1 > row2 then true
-  else if equal_status board.(row1).(col) Ship then false
-    (* overlapping other ship *)
-  else if equal_status board.(row1).(col) Miss then false
-    (* too close to other ships *)
+  else if equal_status board.(row1).(col) Ship then false (* overlapping other ship *)
+  else if equal_status board.(row1).(col) Miss then false (* too close to other ships *)
   else check_above_below board (row1 + 1) row2 col
 
-let order_row_col (row1 : int) (col1 : int) (row2 : int) (col2 : int) :
-    int * int * int * int =
-  (* Get the rows and columns of the start and end clicks *)
+let order_row_col (row1 : int) (col1 : int) (row2 : int) (col2 : int) : int * int * int * int =
+  (* Get the rows and columns of the start and end clicks so row1 < row2 and col1 < col2. *)
   if row1 < row2 then
     if col1 < col2 then (row1, row2, col1, col2) else (row1, row2, col2, col1)
   else if col1 < col2 then (row2, row1, col1, col2)
   else (row2, row1, col2, col1)
 
-let place_ship (board : Board.t) (placed_ships : string) (row1 : int)
-    (col1 : int) (row2 : int) (col2 : int) : (int, string) result =
+let place_ship (board : Board.t) (placed_ships : string) (row1 : int) (col1 : int) 
+  (row2 : int) (col2 : int) : (int, string) result =
   let row1, row2, col1, col2 = order_row_col row1 col1 row2 col2 in
   if row1 <> row2 && col1 <> col2 then Error not_straight_error
   else if row1 = row2 then
-    let ship_size = col2 - col1 + 1 in
-
     (* Place the horizontal ship *)
+    let ship_size = col2 - col1 + 1 in
     if not (check_left_right board row1 col1 col2) then Error touching_error
     else if ship_size > 5 then Error too_big_error
     else if
       String.is_substring placed_ships ~substring:(Int.to_string ship_size)
     then Error repeat_error
-    else if ship_size = 1 then (
+    else if ship_size = 1 then ( (* Place the mine of size 1 *)
       board.(row1).(col1) <- Mine;
       create_miss_radius board row1 col1;
       Ok 1)
     else (
       Array.fill board.(row1) ~pos:col1 ~len:(col2 - col1 + 1) Ship;
-
+      (* Make sure other ships will be outside radius of this ship *)
       for i = col1 to col2 do
         create_miss_radius board row1 i
       done;
-
       Ok ship_size)
   else
+    (* Place the vertical ship *)
     let ship_size = row2 - row1 + 1 in
-    if (* Place the vertical ship *)
-       not (check_above_below board row1 row2 col1)
+    if not (check_above_below board row1 row2 col1)
     then Error touching_error
     else if ship_size > 5 then Error too_big_error
     else if
@@ -104,7 +94,7 @@ let place_ship (board : Board.t) (placed_ships : string) (row1 : int)
     else (
       for i = row1 to row2 do
         Array.fill board.(i) ~pos:col1 ~len:1 Ship;
-        create_miss_radius board i col1
+        create_miss_radius board i col1 (* Make sure other ships will be outside radius of this ship *)
       done;
 
       Ok ship_size)
@@ -122,7 +112,8 @@ let cleanse_board (board : Board.t) : unit =
 
 let is_game_over (board : Board.t) : bool =
   (* Check if unsunken ships still exist *)
-  Array.for_all board ~f:(fun row ->
+  Array.for_all board 
+    ~f:(fun row ->
       (not (Array.mem row Board.ShipHit ~equal:Board.equal_status))
       && not (Array.mem row Board.Ship ~equal:Board.equal_status))
 
@@ -152,9 +143,7 @@ let rec sink_horizontal_ship (board : Board.t) (s : int) (e : int) (row : int) :
   if s > e then true
   else (
     board.(row).(s) <- ShipSunken;
-
     create_miss_radius board row s;
-
     sink_horizontal_ship board (s + 1) e row)
 
 let rec sink_vertical_ship (board : Board.t) (s : int) (e : int) (col : int) :
@@ -163,21 +152,14 @@ let rec sink_vertical_ship (board : Board.t) (s : int) (e : int) (col : int) :
   if s > e then true
   else (
     board.(s).(col) <- ShipSunken;
-
     create_miss_radius board s col;
-
     sink_vertical_ship board (s + 1) e col)
 
 let has_sunk (board : Board.t) (row : int) (col : int) : bool =
-  (* Check if ship is horizontal *)
-  if
-    col > 0
-    && (equal_status board.(row).(col - 1) Ship
-       || equal_status board.(row).(col - 1) ShipHit)
+  (* Check if horizontal ship was sunk *)
+  if col > 0 && (equal_status board.(row).(col - 1) Ship || equal_status board.(row).(col - 1) ShipHit)
   then
-    match
-      ( check_horizontal_sunk board row (col - 1) (-1),
-        check_horizontal_sunk board row (col + 1) 1 )
+    match ( check_horizontal_sunk board row (col - 1) (-1), check_horizontal_sunk board row (col + 1) 1 )
     with
     | Some s, Some e -> sink_horizontal_ship board s e row
     | _, _ -> false
@@ -186,20 +168,18 @@ let has_sunk (board : Board.t) (row : int) (col : int) : bool =
     && (equal_status board.(row).(col + 1) Ship
        || equal_status board.(row).(col + 1) ShipHit)
   then
-    match
-      ( check_horizontal_sunk board row (col - 1) (-1),
-        check_horizontal_sunk board row (col + 1) 1 )
+    match ( check_horizontal_sunk board row (col - 1) (-1), check_horizontal_sunk board row (col + 1) 1 )
     with
     | Some s, Some e -> sink_horizontal_ship board s e row
-    | _, _ -> false (* Check if ship is vertical *)
+    | _, _ -> false 
+  
+  (* Check if vertical ship was sunk *)
   else if
     row > 0
     && (equal_status board.(row - 1).(col) Ship
        || equal_status board.(row - 1).(col) ShipHit)
   then
-    match
-      ( check_vertical_sunk board (row - 1) col (-1),
-        check_vertical_sunk board (row + 1) col 1 )
+    match ( check_vertical_sunk board (row - 1) col (-1), check_vertical_sunk board (row + 1) col 1 )
     with
     | Some s, Some e -> sink_vertical_ship board s e col
     | _, _ -> false
@@ -208,9 +188,7 @@ let has_sunk (board : Board.t) (row : int) (col : int) : bool =
     && (equal_status board.(row + 1).(col) Ship
        || equal_status board.(row + 1).(col) ShipHit)
   then
-    match
-      ( check_vertical_sunk board (row - 1) col (-1),
-        check_vertical_sunk board (row + 1) col 1 )
+    match ( check_vertical_sunk board (row - 1) col (-1), check_vertical_sunk board (row + 1) col 1 )
     with
     | Some s, Some e -> sink_vertical_ship board s e col
     | _, _ -> false
