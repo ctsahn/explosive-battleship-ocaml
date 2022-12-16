@@ -1,31 +1,23 @@
 val not_straight_error : string
 val touching_error : string
 val repeat_error : string
-
 val too_big_error : string
 
 (*
      Given the length of the ship and the positions for the starting and ending
      positions of the ship, place the ship on the player's board.
 
-     Return true if placement is possible, false otherwise.
+     Return Ok <length of ship> if placement is possible, Error <message> otherwise
 *)
-val place_ship :
-  Board.t -> string -> int -> int -> int -> int -> (int, string) result
+val place_ship : Board.t -> string -> int -> int -> int -> int -> (int, string) result
 
 (*
-     Given the position and board to attack, decide whether the player hit a ship or missed.
-
-     Return true if a ship was hit, false otherwise.
-*)
-
-(*
-    Check if a player has sunk all of the opponent's ships. 
+     Check if a player has sunk all of the opponent's ships. 
 *)
 val is_game_over : Board.t -> bool
 
 (*
-    Check if a hit resulted in the sinking of the ship. This also updates the ship status to ShipSunken when appropriate.
+     Check if a hit resulted in the sinking of the ship. This also updates the ship status to ShipSunken when appropriate.
 *)
 val has_sunk : Board.t -> int -> int -> bool
 
@@ -33,8 +25,15 @@ val has_sunk : Board.t -> int -> int -> bool
      Check whether a position in the board is able to be attacked (not previously attacked, not out of bounds, etc).
 *)
 val is_valid_attack : Board.t -> int -> int -> bool
+
+(* 
+     Clear the board of anything but ships. Everything else updated to Empty. 
+*)
 val cleanse_board : Board.t -> unit
 
+(*
+     Save the current single-player game state.
+*)
 val save_single_player_game :
   Board.t ->
   Board.t ->
@@ -46,9 +45,16 @@ val save_single_player_game :
   string ->
   unit
 
+(*
+     Save the current 2-player game state.
+*)
 val save_two_player_game : Board.t -> Board.t -> int -> int -> string -> unit
 
-(* True if two player game *)
+(*
+     Create the boards from a saved game.
+
+     Boolean value is true if it's a 2-player game, false otherwise.
+*)
 val load_game :
   Board.t ->
   Board.t ->
@@ -60,16 +66,7 @@ val load_game :
   string ref ->
   bool
 
+(* 
+     Find a position on the board that has status Ship. 
+*)
 val find_ship : Board.t -> int * int
-
-(*
-     Create the boards from a saved game.
-
-     Boolean value is true if playing against the computer, false otherwise.
-*)
-
-(*
-    Save the current game state.
-
-    Boolean value is true if playing against the computer, false otherwise.
-*)
