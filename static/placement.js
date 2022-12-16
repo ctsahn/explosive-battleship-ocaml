@@ -6,6 +6,7 @@ async function handleShipPlacement(cellid, formid, ready) {
     if (document.getElementById(formid) && !ready  ) {
 
         document.getElementById(cellid).style.backgroundColor = "purple";
+       
         document.getElementById(formid).submit();
 
     }
@@ -34,6 +35,7 @@ function loadColors() {
 
     for (let i = 0; i < shipStatus.length; i++) {
         document.getElementById("length" + shipStatus.charAt(i)).style.color = "purple";
+        document.getElementById("length" + shipStatus.charAt(i)).innerHTML = document.getElementById("length" + shipStatus.charAt(i)).innerHTML + " - placed!"; 
     }
 
     // highlight length of current ship you place

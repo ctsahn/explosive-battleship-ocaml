@@ -66,15 +66,16 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
   <div id="placed-ship-size" style="display: none;"><%s placed_ship_size %></div>
   <div id="ship-status" style="display: none;"><%s ship_status %></div>
 
-  <h2 id="length5">5<h2>
-  <h2 id="length4">4<h2>
-  <h2 id="length3">3<h2>
-  <h2 id="length2">2<h2>
-  <h2 id="length1">Mine<h2>
+  <h2 id="length5">Carrier (length of 5)</h2>
+  <h2 id="length4">Battleship (length of 4)</h2>
+  <h2 id="length3">Cruiser (length of 3) </h2>
+  <h2 id="length2">Destroyer (length of 2)</h2>
+  <h2 id="length1">Mine (length of 1) </h2>
 
 
 
-
+  
+  <div class="column">
   <table class="board">
       <tbody>
       <tr>
@@ -155,6 +156,34 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
 
          
   </form>
+
+  </div>
+
+
+  
+  <div style="padding-left: 400px; width:1000px">
+  <p> 
+  
+  Placement instructions:
+
+  <ol>
+  <li> Each player must place one type of each ship (Carrier, Battleship, Cruiser, Destroyer, Mine). 
+  
+  <li>  In order to place one ship, two clicks are required: the first click marks where the ship starts and the second click marks where the ship ends. Ships must be placed either horizontally or vertically.
+  
+  </li>
+  <li>  Ships cannot touch each other; a radius of squares will be formed around a ship when placed. 
+  </li>
+  <li>  The Mine is a special ship that occupies only one square (it can be placed by clicking the same square twice). When the Mine is hit by your opponent, it automatically hits one of their ships' squares. The turn also becomes yours! 
+  </li>
+
+  <li>  The board can be cleared by clicking "Reset board". 
+  </li>
+
+  </ol>
+  
+  </p>
+  </div>
 
 
 
@@ -334,8 +363,36 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
       <button disabled>Bomb</button>
 % end
 % else begin
-      <button onclick="bombSet=true; this.disabled=true;">Bomb</button>
+      <button onclick="bombSet=true; this.disabled=true; this.innerHTML = 'Click to fire bomb!';">Bomb</button>
 % end;
+
+
+
+
+
+      <div style="padding-left:50px;padding-top:50px;width:1500px;">
+      <p> 
+
+      Game rules:
+
+      <ol>
+      <li> The rules of traditional Battleship apply: a miss results in the opponent's turn and a hit results in your turn continuing. The first player to sink all opponent ships wins!
+
+      <li>  Each player gets 3 Bombs. A Bomb can be fired by clicking "Bomb" and clicking on the square you want to fire at; the Bomb will attack that square and the squares directly surrounding it. 
+      </li>
+      <li>  When a ship is sunk, all squares around it will be revealed (as ships cannot touch each other).
+      </li>
+      <li>  A hit Mine is represented by a black square. When the Mine is hit by your opponent, it automatically hits one of their ships' squares. The turn also becomes yours! 
+      </li>
+
+      <li>  The game can be saved by clicking "Save game". Only one game can be saved at a time. 
+      </li>
+
+      </ol>
+
+      </p>
+      </div>
+
 
   <script src= "static/two-player.js">
   
@@ -515,13 +572,45 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
       <button disabled>Bomb</button>
 % end
 % else begin
-      <button onclick="bombSet=true; this.disabled=true;">Bomb</button>
+      <button onclick="bombSet=true; this.disabled=true; this.innerHTML = 'Click to fire bomb!';">Bomb</button>
 % end;
 
+
+
+
+
+
+
+
+<div style="padding-left:50px;padding-top:50px;width:1500px;">
+<p> 
+
+Game rules:
+
+<ol>
+<li> The rules of traditional Battleship apply: a miss results in the opponent's turn and a hit results in your turn continuing. The first player to sink all opponent ships wins!
+
+<li>  Each player gets 3 Bombs. A Bomb can be fired by clicking "Bomb" and clicking on the square you want to fire at; the Bomb will attack that square and the squares directly surrounding it. 
+</li>
+<li>  When a ship is sunk, all squares around it will be revealed (as ships cannot touch each other).
+</li>
+<li>  A hit Mine is represented by a black square. When the Mine is hit by your opponent, it automatically hits one of their ships' squares. The turn also becomes yours! 
+</li>
+
+<li>  The game can be saved by clicking "Save game". Only one game can be saved at a time. 
+</li>
+
+
+</ol>
+
+</p>
+</div>
 
 <script src= "static/single-player.js">
 
 </script>
 </body>
+
+
 </html>
 
