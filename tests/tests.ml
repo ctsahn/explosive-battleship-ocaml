@@ -392,7 +392,39 @@ let test_save_load_single_player_game _ =
   assert_equal "user" @@ !loaded_turn;
   assert_equal (Queue.to_list horz_queue) @@ Queue.to_list new_horz_queue;
   assert_equal (Queue.to_list vert_queue) @@ Queue.to_list new_vert_queue;
-  assert_equal "vertical" @@ !loaded_dir
+  assert_equal "vertical" @@ !loaded_dir;
+
+
+  Queue.clear horz_queue;
+  Queue.clear vert_queue;
+
+  Game.save_single_player_game user_board cpu_board 0 0 "cpu" horz_queue
+    vert_queue "horizontal";
+
+
+    let new_user_board_2 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let new_cpu_board_2 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let new_horz_queue_2 = Queue.create () in
+  let new_vert_queue_2 = Queue.create () in
+
+  let loaded_turn_2 = ref "" in
+  let loaded_dir_2 = ref "" in
+  let loaded_user_bombs_2 = ref 0 in
+  let loaded_cpu_bombs_2 = ref 0 in
+  let res_2 =
+    Game.load_game new_user_board_2 new_cpu_board_2 loaded_user_bombs_2
+      loaded_cpu_bombs_2 loaded_turn_2 new_horz_queue_2 new_vert_queue_2 loaded_dir_2
+  in
+
+  assert_equal false @@ res_2;
+  assert_equal user_board @@ new_user_board_2;
+  assert_equal cpu_board @@ new_cpu_board_2;
+  assert_equal "cpu" @@ !loaded_turn_2;
+  assert_equal (Queue.to_list horz_queue) @@ Queue.to_list new_horz_queue_2;
+  assert_equal (Queue.to_list vert_queue) @@ Queue.to_list new_vert_queue_2;
+  assert_equal "horizontal" @@ !loaded_dir_2
+
+
 
 let game_tests =
   "Game"
