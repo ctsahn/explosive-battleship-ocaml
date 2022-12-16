@@ -148,6 +148,20 @@ let test_has_sunk _ =
     arr
   in
 
+  let vertical_ship_not_sunk_2 = 
+    let arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in 
+    arr.(0).(1) <- Ship;
+    arr.(1).(1) <- ShipHit;
+    arr
+  in
+
+  let vertical_ship_not_sunk_3 = 
+    let arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in 
+    arr.(0).(0) <- ShipHit;
+    arr.(1).(0) <- Ship;
+    arr
+  in
+
   let horizontal_ship_sunk =
     let arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in
     arr.(0).(1) <- ShipHit;
@@ -167,6 +181,14 @@ let test_has_sunk _ =
   assert_equal ShipSunken @@ vertical_ship_sunk.(1).(1);
 
   assert_equal true @@ Game.has_sunk vertical_ship_sunk_2 1 1;
+
+  assert_equal false @@ Game.has_sunk vertical_ship_not_sunk 0 0;
+  assert_equal false @@ Game.has_sunk vertical_ship_not_sunk 0 1;
+  assert_equal false @@ Game.has_sunk vertical_ship_not_sunk 1 2;
+  assert_equal false @@ Game.has_sunk vertical_ship_not_sunk 0 2;
+
+  assert_equal false @@ Game.has_sunk vertical_ship_not_sunk_2 1 1;
+  assert_equal false @@ Game.has_sunk vertical_ship_not_sunk_3 0 0;
 
   assert_equal false @@ Game.has_sunk vertical_ship_not_sunk 1 1;
   assert_equal true @@ Game.has_sunk horizontal_ship_sunk 0 1;
@@ -260,15 +282,15 @@ let test_place_ship _ =
   assert_equal Miss @@ arr.(2).(2);
   assert_equal Miss @@ arr.(4).(2);
 
+  assert_equal (Error Game.not_straight_error) @@ Game.place_ship arr "" 7 8 8 9;
   assert_equal (Error Game.not_straight_error) @@ Game.place_ship arr "" 4 7 7 6;
   assert_equal (Error Game.touching_error) @@ Game.place_ship arr "" 4 7 4 6;
   assert_equal (Error Game.touching_error) @@ Game.place_ship arr "" 3 3 2 3;
   assert_equal (Error Game.too_big_error) @@ Game.place_ship arr "" 0 0 6 0;
   assert_equal (Error Game.too_big_error) @@ Game.place_ship arr "" 7 0 7 6;
   assert_equal (Error Game.repeat_error) @@ Game.place_ship arr "4" 0 0 3 0;
-  assert_equal (Error Game.repeat_error) @@ Game.place_ship arr "2" 0 1 0 2    
-
-
+  assert_equal (Error Game.repeat_error) @@ Game.place_ship arr "2" 0 1 0 2;
+  assert_equal (Error Game.touching_error) @@ Game.place_ship arr "" 4 7 5 7
   
 
 let test_is_valid_attack _ =
