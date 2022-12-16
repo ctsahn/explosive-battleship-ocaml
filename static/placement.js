@@ -45,7 +45,6 @@ function loadColors() {
     }
 
 }
-//loadColors(); // we want to call this every time we load a page
 
 
 

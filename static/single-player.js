@@ -18,13 +18,11 @@ async function handleClick(cellid,formid,gameOver){
 }
 
 // when CPU turn, automatically send a request to the /cpu_turn endpoint
-async function handleCPUTurn(gameOver){
+
+function loadColors(gameOver){
   if(document.getElementById("cpu-turn") &&!gameOver){
     document.getElementById("cpu-turn").submit();
   }
-
-}
-function loadColors(){
     
     let userBoardStatus = document.getElementById("user-board-status").innerHTML;
     let cpuBoardStatus = document.getElementById("cpu-board-status").innerHTML;
@@ -63,10 +61,10 @@ function loadColors(){
         if(cpuBoardStatus[i] == 1){
           document.getElementById("cpucell" + i).innerHTML= "•";
         }
-       /* // ship: for testing only, delete later TODO
-        else if(cpuBoardStatus[i] == 2){
+
+        else if(cpuBoardStatus[i] == 2 && gameOver ){
           document.getElementById("cpucell" + i).style.backgroundColor = "blue";
-        }*/
+        }
         // hit
         else if(cpuBoardStatus[i] == 3){
           
@@ -80,10 +78,11 @@ function loadColors(){
           document.getElementById("cpucell" + i).style.color = "red";
           document.getElementById("cpucell" + i).style.borderColor = "red";
         } 
-        /*
-        else if(cpuBoardStatus[i]==5){
+        
+        
+        else if(cpuBoardStatus[i]==5 && gameOver ){
           document.getElementById("cpucell" + i).style.backgroundColor = "gray";
-        } */
+        } 
         else if(cpuBoardStatus[i]==6){
           document.getElementById("cpucell" + i).style.backgroundColor = "black";
           document.getElementById("cpucell" + i).innerHTML = "";
@@ -92,4 +91,3 @@ function loadColors(){
     }
 
 }
-loadColors(); // we want to call this every time we load a page

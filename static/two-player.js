@@ -18,7 +18,7 @@ async function handleClick(cellid, formid, currentTurn,gameOver) {
 }
 
 
-function loadColors() {
+function loadColors(gameOver) {
 
   let player1BoardStatus = document.getElementById("player1-board-status").innerHTML;
   let player2BoardStatus = document.getElementById("player2-board-status").innerHTML;
@@ -29,8 +29,9 @@ function loadColors() {
     if (player1BoardStatus[i] == 1) {
       document.getElementById("player1cell" + i).innerHTML = "•";
     }
+    
     // ship
-    else if (player1BoardStatus[i] == 2) {
+    else if (player1BoardStatus[i] == 2 && gameOver ) {
       document.getElementById("player1cell" + i).style.backgroundColor = "blue";
     }
     // hit
@@ -47,13 +48,13 @@ function loadColors() {
       document.getElementById("player1cell" + i).style.borderColor = "red";
     }
 
-    // sunk
-    else if (player1BoardStatus[i] == 5) {
+    
+    else if (player1BoardStatus[i] == 5 && gameOver ) {
       document.getElementById("player1cell" + i).style.backgroundColor = "gray";
 
       
     }
-    else if (player1BoardStatus[i] == 6) {
+    else if (player1BoardStatus[i] == 6  ) {
       document.getElementById("player1cell" + i).style.backgroundColor = "black";
       document.getElementById("player1cell" + i).innerHTML = "";
       
@@ -63,8 +64,9 @@ function loadColors() {
     if (player2BoardStatus[i] == 1) {
       document.getElementById("player2cell" + i).innerHTML = "•";
     }
-    // ship
-    else if (player2BoardStatus[i] == 2) {
+    
+    
+    else if (player2BoardStatus[i] == 2 && gameOver) {
       document.getElementById("player2cell" + i).style.backgroundColor = "blue";
     }
     // hit
@@ -80,12 +82,13 @@ function loadColors() {
       document.getElementById("player2cell" + i).style.color = "red";
       document.getElementById("player2cell" + i).style.borderColor = "red";
     }
-    else if (player2BoardStatus[i] == 5) {
+    
+    else if (player2BoardStatus[i] == 5 && gameOver) {
       document.getElementById("player2cell" + i).style.backgroundColor = "gray";
       
       
     }
-    else if (player2BoardStatus[i] == 6) {
+    else if (player2BoardStatus[i] == 6  ) {
       document.getElementById("player2cell" + i).style.backgroundColor = "black";
       document.getElementById("player2cell" + i).innerHTML = "";
       
@@ -94,4 +97,3 @@ function loadColors() {
   }
 
 }
-loadColors(); // we want to call this every time we load a page

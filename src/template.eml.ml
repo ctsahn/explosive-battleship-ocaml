@@ -132,9 +132,6 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
 %     end
 %     else if (error = Game.too_big_error) then begin 
       <p style="color:red"> Ship too large! </p>
-%     end
-%     else if (error = Game.too_small_error) then begin 
-      <p style="color:red"> Ship too small! </p>
 %     end;
 
 
@@ -211,7 +208,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
         </td>
 %       display_player2_row row (col+1)
 %   in  
-  <body>
+  <body onload=<%s "loadColors(" ^game_over ^")"%> >
 
 %     let turn_display = 
 %       if (game_over = "true" && turn = "player1") then "Player 1 wins!"
@@ -383,7 +380,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
       </td>
 %       display_cpu_row row (col+1)
 %   in  
-<body onload=<%s "handleCPUTurn("^game_over^")" %> >
+<body onload=<%s "loadColors(" ^game_over ^")"%> >
 
 % if turn = "user" && game_over = "true" then begin
 <h1> User wins! </h1>

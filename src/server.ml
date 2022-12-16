@@ -176,7 +176,7 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t)
         player1_bombs := !player1_bombs - 1
       else player2_bombs := !player2_bombs - 1;
 
-      Player.use_bomb opponent_board penalty_board row col false)
+      Player.player_bomb opponent_board penalty_board row col false)
     else
       let user_move_tuple = Int.of_string user_move |> Board.convert_position in
 
@@ -186,7 +186,17 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t)
       Player.player_attack opponent_board penalty_board row col false
   in
 
-  if ship_hit then
+  if Game.is_game_over penalty_board then (
+    current_turn :=
+      if String.( = ) !current_turn "player1" then "player2" else "player1";
+    Dream.html
+      (Template.two_player_game_board
+         ~player1_board_status:(Board.board_to_string player1_board)
+         ~player2_board_status:(Board.board_to_string player2_board)
+         ~player1_bombs:(Int.to_string !player1_bombs)
+         ~player2_bombs:(Int.to_string !player2_bombs)
+         ~turn:!current_turn ~game_over:"true" request))
+  else if ship_hit then
     if Game.is_game_over opponent_board then
       Dream.html
         (Template.two_player_game_board
@@ -218,7 +228,16 @@ let handle_player_turn (user_move : string) (opponent_board : Board.t)
 
 let handle_cpu_turn request =
   let ship_hit = Cpu.cpu_attack player1_board player2_board player2_bombs in
-  if ship_hit then
+
+  if Game.is_game_over player2_board then
+    Dream.html
+      (Template.single_player_game_board
+         ~user_board_status:(Board.board_to_string player1_board)
+         ~cpu_board_status:(Board.board_to_string player2_board)
+         ~user_bombs:(Int.to_string !player1_bombs)
+         ~cpu_bombs:(Int.to_string !player2_bombs)
+         ~turn:"user" ~game_over:"true" request)
+  else if ship_hit then
     if Game.is_game_over player1_board then
       Dream.html
         (Template.single_player_game_board
@@ -260,7 +279,7 @@ let handle_user_turn (user_move : string) request =
 
       player1_bombs := !player1_bombs - 1;
 
-      Player.use_bomb player2_board player1_board row col true)
+      Player.player_bomb player2_board player1_board row col true)
     else
       let user_move_tuple = Int.of_string user_move |> Board.convert_position in
 
@@ -270,7 +289,15 @@ let handle_user_turn (user_move : string) request =
       Player.player_attack player2_board player1_board row col true
   in
 
-  if ship_hit then
+  if Game.is_game_over player1_board then
+    Dream.html
+      (Template.single_player_game_board
+         ~user_board_status:(Board.board_to_string player1_board)
+         ~cpu_board_status:(Board.board_to_string player2_board)
+         ~user_bombs:(Int.to_string !player1_bombs)
+         ~cpu_bombs:(Int.to_string !player2_bombs)
+         ~turn:"cpu" ~game_over:"true" request)
+  else if ship_hit then
     if Game.is_game_over player2_board then
       Dream.html
         (Template.single_player_game_board
@@ -368,14 +395,12 @@ let () =
          Dream.post "/player1_turn" (fun request ->
              match%lwt Dream.form request with
              | `Ok [ ("player1-move", message) ] ->
-                 Core_unix.sleep 1;
                  (* short delay so we can actually see the move being made *)
                  handle_player_turn message player2_board player1_board request
              | _ -> Dream.empty `Bad_Request);
          Dream.post "/player2_turn" (fun request ->
              match%lwt Dream.form request with
              | `Ok [ ("player2-move", message) ] ->
-                 Core_unix.sleep 1;
                  (* short delay so we can actually see the move being made *)
                  handle_player_turn message player1_board player2_board request
              | _ -> Dream.empty `Bad_Request);
@@ -398,7 +423,6 @@ let () =
          Dream.post "/user_turn" (fun request ->
              match%lwt Dream.form request with
              | `Ok [ ("user-move", message) ] ->
-                 Core_unix.sleep 1;
                  (* short delay so we can actually see the move being made *)
                  handle_user_turn message request
              | _ -> Dream.empty `Bad_Request);

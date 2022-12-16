@@ -7,7 +7,6 @@ open Board
 let not_straight_error = "not straight"
 let touching_error = "touching"
 let repeat_error = "repeat"
-let too_small_error = "small"
 let too_big_error = "big"
 
 (* Create a radius of "Miss" squares when we sink a ship or place a ship, as we know ships cannot touch each other *)
@@ -99,7 +98,6 @@ let place_ship (board : Board.t) (placed_ships : string) (row1 : int)
        not (check_above_below board row1 row2 col1)
     then Error touching_error
     else if ship_size > 5 then Error too_big_error
-    else if ship_size < 2 then Error too_small_error
     else if
       String.is_substring placed_ships ~substring:(Int.to_string ship_size)
     then Error repeat_error

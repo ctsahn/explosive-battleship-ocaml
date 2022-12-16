@@ -19,16 +19,18 @@ let player_attack (board : Board.t) (mine_penalty_board : Board.t) (row : int)
       let _ =
         Cpu.attack_given_coords mine_penalty_board board penalty_row penalty_col
       in
+
       false
     else (
       mine_penalty_board.(penalty_row).(penalty_col) <- ShipHit;
+      let _ = Game.has_sunk mine_penalty_board penalty_row penalty_col in
       false))
   else (
     board.(row).(col) <- Board.Miss;
     false)
 
-let use_bomb (board : Board.t) (mine_penalty_board : Board.t) (row : int)
-    (col : int) (is_single_player : bool): bool =
+let player_bomb (board : Board.t) (mine_penalty_board : Board.t) (row : int)
+    (col : int) (is_single_player : bool) : bool =
   let hit_queue = Queue.create () in
 
   Queue.enqueue hit_queue

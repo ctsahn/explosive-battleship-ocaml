@@ -1,7 +1,7 @@
 val not_straight_error : string
 val touching_error : string
 val repeat_error : string
-val too_small_error : string
+
 val too_big_error : string
 
 (*

@@ -108,6 +108,7 @@ let attack_given_coords (user_board : Board.t) (cpu_board : Board.t)
     let penalty_row = fst penalty_tuple in
     let penalty_col = snd penalty_tuple in
     cpu_board.(penalty_row).(penalty_col) <- Board.ShipHit;
+    let _ = Game.has_sunk cpu_board penalty_row penalty_col in
 
     false)
   else (
@@ -171,7 +172,7 @@ let cpu_attack (user_board : Board.t) (cpu_board : Board.t)
       && (not
             (attack_row = 0 || attack_row = 9 || attack_col = 0
            || attack_col = 9))
-      && Random.int 4 = 0
+      
     then (
       bombs_remaining := !bombs_remaining - 1;
 
