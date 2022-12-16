@@ -3,6 +3,10 @@
   (deps 
     src/board.ml
     src/board.mli
+    src/player.ml
+    src/player.mli
+    src/cpu.ml
+    src/cpu.mli
     src/dune
     src/game.ml
     src/game.mli
