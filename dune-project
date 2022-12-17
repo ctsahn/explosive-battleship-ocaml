@@ -10,7 +10,7 @@
  (synopsis "An OCaml library for Playing Battleship")
  (description "Users can play battleship on a Dream web server, either playing against the computer or another player.")
  (depends
-  (ounit2 (> 2.2)) 
-  (core (> 0.15.0)) 
+  (ounit2 (>= 2.2.6)) 
+  (core (>= 0.15.0)) 
   (dream (= 1.0.0~alpha4))
-  (lwt (> 5.6.1))))
+  (lwt (>= 5.6.1))))
