@@ -23,18 +23,16 @@ let test_populate_board _ =
   populate_board empty_arr "111111111";
   assert_equal (Array.make_matrix ~dimx:3 ~dimy:3 Miss) @@ empty_arr;
 
+  let empty_arr_2 = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
   let result_arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
   result_arr.(0).(0) <- ShipHit;
   result_arr.(0).(1) <- ShipSunken;
   result_arr.(0).(2) <- Miss;
   result_arr.(1).(0) <- Ship;
-
-  let empty_arr_2 = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
-
   populate_board empty_arr_2 "341200000";
   assert_equal result_arr @@ empty_arr_2
 
-let test_initialize_board _ =
+let test_initialize_boards _ =
   assert_equal
     ( Array.make_matrix ~dimx:10 ~dimy:10 Empty,
       Array.make_matrix ~dimx:10 ~dimy:10 Empty )
@@ -46,10 +44,7 @@ let test_convert_position _ =
   assert_equal (9, 2) @@ convert_position 92
 
 let test_reset _ =
-  let sample_array =
-    let arr = Array.make_matrix ~dimx:10 ~dimy:10 Ship in
-    arr
-  in
+  let sample_array = Array.make_matrix ~dimx:10 ~dimy:10 Ship in
   reset sample_array;
   assert_equal (Array.make_matrix ~dimx:10 ~dimy:10 Empty) @@ sample_array
 
@@ -57,10 +52,10 @@ let board_tests =
   "Board"
   >: test_list
        [
-         "board to string" >:: test_board_to_string;
+         "board_to_string" >:: test_board_to_string;
          "populate_board" >:: test_populate_board;
-         "initialize board" >:: test_initialize_board;
-         "convert position" >:: test_convert_position;
+         "initialize_boards" >:: test_initialize_boards;
+         "convert_position" >:: test_convert_position;
          "reset" >:: test_reset;
        ]
 
@@ -78,28 +73,35 @@ let test_player_attack _ =
   penalty_arr.(1).(1) <- Ship;
   penalty_arr.(1).(2) <- Ship;
 
+  (* Miss *)
   assert_equal false @@ Player.player_attack arr arr 4 4 false;
+  (* Hit *)
   assert_equal true @@ Player.player_attack arr arr 4 5 false;
+  (* Mine hit *)
   assert_equal false @@ Player.player_attack arr penalty_arr 4 6 false;
+  (* Mine hit *)
   assert_equal false @@ Player.player_attack arr penalty_arr 4 7 false;
+  (* Mine hits result in ship sink for penalty board *)
   assert_equal ShipSunken @@ penalty_arr.(1).(1);
   assert_equal ShipSunken @@ penalty_arr.(1).(2);
 
   penalty_arr.(3).(5) <- Ship;
   penalty_arr.(3).(6) <- Ship;
+  (* Single player, so CPU should attack penalty board *)
   assert_equal false @@ Player.player_attack arr penalty_arr 4 8 true;
 
   assert_equal true
   @@ (equal_status penalty_arr.(3).(5) ShipHit
      || equal_status penalty_arr.(3).(6) ShipHit);
+
+  (* Check CPU queues, since they should not be empty due to ship hit *)
   assert_equal false @@ Queue.is_empty Cpu.horz_attack_queue;
   assert_equal false @@ Queue.is_empty Cpu.vert_attack_queue
 
 let test_player_bomb _ =
-  let empty_array = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
   let arr = Array.make_matrix ~dimx:3 ~dimy:3 Empty in
 
-  let res = Player.player_bomb arr empty_array 1 1 false in
+  let res = Player.player_bomb arr arr 1 1 false in
 
   assert_equal false @@ res;
   assert_equal 9
@@ -107,7 +109,9 @@ let test_player_bomb _ =
          tot + Array.count arr_row ~f:(fun e -> equal_status e Miss));
 
   let arr2 = Array.make_matrix ~dimx:3 ~dimy:3 Ship in
-  let res2 = Player.player_bomb arr2 empty_array 1 1 false in
+
+  let res2 = Player.player_bomb arr2 arr2 1 1 false in
+
   assert_equal true @@ res2;
   assert_equal 9
   @@ Array.fold arr2 ~init:0 ~f:(fun tot arr_row ->
@@ -143,15 +147,15 @@ let test_has_sunk _ =
     arr
   in
 
-  let vertical_ship_not_sunk_2 = 
-    let arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in 
+  let vertical_ship_not_sunk_2 =
+    let arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in
     arr.(0).(1) <- Ship;
     arr.(1).(1) <- ShipHit;
     arr
   in
 
-  let vertical_ship_not_sunk_3 = 
-    let arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in 
+  let vertical_ship_not_sunk_3 =
+    let arr = Array.make_matrix ~dimx:3 ~dimy:3 Miss in
     arr.(0).(0) <- ShipHit;
     arr.(1).(0) <- Ship;
     arr
@@ -195,19 +199,17 @@ let test_find_ship _ =
   assert_equal (1, 1) @@ Game.find_ship arr
 
 let test_is_game_over _ =
-  let make_sample_array =
-    let arr = Array.make_matrix ~dimx:2 ~dimy:2 Ship in
-    arr.(1).(1) <- ShipSunken;
-    arr.(0).(1) <- ShipHit;
-    arr
-  in
   assert_equal true
   @@ Game.is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 Empty);
 
   assert_equal true
   @@ Game.is_game_over (Array.make_matrix ~dimx:2 ~dimy:2 ShipSunken);
 
-  assert_equal false @@ Game.is_game_over make_sample_array
+  let arr = Array.make_matrix ~dimx:2 ~dimy:2 Ship in
+  arr.(1).(1) <- ShipSunken;
+  arr.(0).(1) <- ShipHit;
+
+  assert_equal false @@ Game.is_game_over arr
 
 let test_place_ship _ =
   let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
@@ -216,15 +218,15 @@ let test_place_ship _ =
   assert_equal Ship @@ arr.(1).(5);
   assert_equal Ship @@ arr.(1).(6);
   assert_equal Ship @@ arr.(1).(7);
+
+  (* Ship radius *)
   assert_equal Miss @@ arr.(1).(4);
   assert_equal Miss @@ arr.(1).(8);
-
   assert_equal Miss @@ arr.(0).(4);
   assert_equal Miss @@ arr.(0).(5);
   assert_equal Miss @@ arr.(0).(6);
   assert_equal Miss @@ arr.(0).(7);
   assert_equal Miss @@ arr.(0).(8);
-
   assert_equal Miss @@ arr.(2).(4);
   assert_equal Miss @@ arr.(2).(5);
   assert_equal Miss @@ arr.(2).(6);
@@ -237,12 +239,11 @@ let test_place_ship _ =
   assert_equal Ship @@ arr.(4).(9);
   assert_equal Ship @@ arr.(5).(9);
 
+  (* Ship radius *)
   assert_equal Miss @@ arr.(1).(9);
   assert_equal Miss @@ arr.(6).(9);
-
   assert_equal Miss @@ arr.(1).(8);
   assert_equal Miss @@ arr.(6).(8);
-
   assert_equal Miss @@ arr.(2).(8);
   assert_equal Miss @@ arr.(3).(8);
   assert_equal Miss @@ arr.(4).(8);
@@ -252,13 +253,13 @@ let test_place_ship _ =
   assert_equal Ship @@ arr.(4).(6);
   assert_equal Ship @@ arr.(4).(7);
 
+  (* Ship radius *)
   assert_equal Miss @@ arr.(3).(7);
   assert_equal Miss @@ arr.(3).(6);
   assert_equal Miss @@ arr.(5).(6);
   assert_equal Miss @@ arr.(5).(7);
   assert_equal Miss @@ arr.(4).(8);
   assert_equal Miss @@ arr.(4).(5);
-
   assert_equal Miss @@ arr.(5).(8);
   assert_equal Miss @@ arr.(3).(8);
   assert_equal Miss @@ arr.(5).(5);
@@ -267,6 +268,7 @@ let test_place_ship _ =
   assert_equal (Ok 1) @@ Game.place_ship arr "" 3 3 3 3;
   assert_equal Mine @@ arr.(3).(3);
 
+  (* Ship radius *)
   assert_equal Miss @@ arr.(3).(2);
   assert_equal Miss @@ arr.(3).(4);
   assert_equal Miss @@ arr.(2).(3);
@@ -285,7 +287,6 @@ let test_place_ship _ =
   assert_equal (Error Game.repeat_error) @@ Game.place_ship arr "4" 0 0 3 0;
   assert_equal (Error Game.repeat_error) @@ Game.place_ship arr "2" 0 1 0 2;
   assert_equal (Error Game.touching_error) @@ Game.place_ship arr "" 4 7 5 7
-  
 
 let test_is_valid_attack _ =
   let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
@@ -313,15 +314,14 @@ let test_cleanse_board _ =
   assert_equal Ship @@ arr.(1).(6);
   assert_equal Ship @@ arr.(1).(7);
 
+  (* Ship radius gone *)
   assert_equal Empty @@ arr.(1).(4);
   assert_equal Empty @@ arr.(1).(8);
-
   assert_equal Empty @@ arr.(0).(4);
   assert_equal Empty @@ arr.(0).(5);
   assert_equal Empty @@ arr.(0).(6);
   assert_equal Empty @@ arr.(0).(7);
   assert_equal Empty @@ arr.(0).(8);
-
   assert_equal Empty @@ arr.(2).(4);
   assert_equal Empty @@ arr.(2).(5);
   assert_equal Empty @@ arr.(2).(6);
@@ -337,20 +337,20 @@ let test_save_load_two_player_game _ =
   player2_board.(9).(9) <- MineHit;
   Game.save_two_player_game player1_board player2_board 3 2 "player1";
 
-  let new_player1_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  let new_player2_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let loaded_player1_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let loaded_player2_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
   let loaded_player1_bombs = ref 0 in
   let loaded_player2_bombs = ref 0 in
   let loaded_turn = ref "" in
   let res =
-    Game.load_game new_player1_board new_player2_board loaded_player1_bombs
-      loaded_player2_bombs loaded_turn (Queue.create ()) (Queue.create ())
-      (ref "")
+    Game.load_game loaded_player1_board loaded_player2_board
+      loaded_player1_bombs loaded_player2_bombs loaded_turn (Queue.create ())
+      (Queue.create ()) (ref "")
   in
 
   assert_equal true @@ res;
-  assert_equal player1_board @@ new_player1_board;
-  assert_equal player2_board @@ new_player2_board;
+  assert_equal player1_board @@ loaded_player1_board;
+  assert_equal player2_board @@ loaded_player2_board;
   assert_equal 3 @@ !loaded_player1_bombs;
   assert_equal 2 @@ !loaded_player2_bombs;
   assert_equal "player1" @@ !loaded_turn
@@ -372,28 +372,28 @@ let test_save_load_single_player_game _ =
   Game.save_single_player_game user_board cpu_board 3 2 "user" horz_queue
     vert_queue "vertical";
 
-  let new_user_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  let new_cpu_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  let new_horz_queue = Queue.create () in
-  let new_vert_queue = Queue.create () in
+  let loaded_user_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let loaded_cpu_board = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let loaded_horz_queue = Queue.create () in
+  let loaded_vert_queue = Queue.create () in
 
   let loaded_turn = ref "" in
   let loaded_dir = ref "" in
   let loaded_user_bombs = ref 0 in
   let loaded_cpu_bombs = ref 0 in
   let res =
-    Game.load_game new_user_board new_cpu_board loaded_user_bombs
-      loaded_cpu_bombs loaded_turn new_horz_queue new_vert_queue loaded_dir
+    Game.load_game loaded_user_board loaded_cpu_board loaded_user_bombs
+      loaded_cpu_bombs loaded_turn loaded_horz_queue loaded_vert_queue
+      loaded_dir
   in
 
   assert_equal false @@ res;
-  assert_equal user_board @@ new_user_board;
-  assert_equal cpu_board @@ new_cpu_board;
+  assert_equal user_board @@ loaded_user_board;
+  assert_equal cpu_board @@ loaded_cpu_board;
   assert_equal "user" @@ !loaded_turn;
-  assert_equal (Queue.to_list horz_queue) @@ Queue.to_list new_horz_queue;
-  assert_equal (Queue.to_list vert_queue) @@ Queue.to_list new_vert_queue;
+  assert_equal (Queue.to_list horz_queue) @@ Queue.to_list loaded_horz_queue;
+  assert_equal (Queue.to_list vert_queue) @@ Queue.to_list loaded_vert_queue;
   assert_equal "vertical" @@ !loaded_dir;
-
 
   Queue.clear horz_queue;
   Queue.clear vert_queue;
@@ -401,30 +401,28 @@ let test_save_load_single_player_game _ =
   Game.save_single_player_game user_board cpu_board 0 0 "cpu" horz_queue
     vert_queue "horizontal";
 
-
-    let new_user_board_2 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  let new_cpu_board_2 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  let new_horz_queue_2 = Queue.create () in
-  let new_vert_queue_2 = Queue.create () in
+  let loaded_user_board_2 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let loaded_cpu_board_2 = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
+  let loaded_horz_queue_2 = Queue.create () in
+  let loaded_vert_queue_2 = Queue.create () in
 
   let loaded_turn_2 = ref "" in
   let loaded_dir_2 = ref "" in
   let loaded_user_bombs_2 = ref 0 in
   let loaded_cpu_bombs_2 = ref 0 in
   let res_2 =
-    Game.load_game new_user_board_2 new_cpu_board_2 loaded_user_bombs_2
-      loaded_cpu_bombs_2 loaded_turn_2 new_horz_queue_2 new_vert_queue_2 loaded_dir_2
+    Game.load_game loaded_user_board_2 loaded_cpu_board_2 loaded_user_bombs_2
+      loaded_cpu_bombs_2 loaded_turn_2 loaded_horz_queue_2 loaded_vert_queue_2
+      loaded_dir_2
   in
 
   assert_equal false @@ res_2;
-  assert_equal user_board @@ new_user_board_2;
-  assert_equal cpu_board @@ new_cpu_board_2;
+  assert_equal user_board @@ loaded_user_board_2;
+  assert_equal cpu_board @@ loaded_cpu_board_2;
   assert_equal "cpu" @@ !loaded_turn_2;
-  assert_equal (Queue.to_list horz_queue) @@ Queue.to_list new_horz_queue_2;
-  assert_equal (Queue.to_list vert_queue) @@ Queue.to_list new_vert_queue_2;
+  assert_equal (Queue.to_list horz_queue) @@ Queue.to_list loaded_horz_queue_2;
+  assert_equal (Queue.to_list vert_queue) @@ Queue.to_list loaded_vert_queue_2;
   assert_equal "horizontal" @@ !loaded_dir_2
-
-
 
 let game_tests =
   "Game"
@@ -445,17 +443,20 @@ let test_cpu_attack _ =
   Queue.clear Cpu.horz_attack_queue;
   Queue.clear Cpu.vert_attack_queue;
   let empty_array = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
-  let ship_full_array = Array.make_matrix ~dimx:10 ~dimy:10 Ship in
-
+  (* Miss *)
   assert_equal false @@ Cpu.cpu_attack empty_array empty_array (ref 0);
   assert_equal true @@ Queue.is_empty Cpu.horz_attack_queue;
   assert_equal true @@ Queue.is_empty Cpu.vert_attack_queue;
 
+  let ship_full_array = Array.make_matrix ~dimx:10 ~dimy:10 Ship in
+  (* Hit *)
   assert_equal true @@ Cpu.cpu_attack ship_full_array empty_array (ref 0);
   assert_equal "" @@ !Cpu.attack_direction;
   assert_equal false @@ Queue.is_empty Cpu.horz_attack_queue;
   assert_equal false @@ Queue.is_empty Cpu.vert_attack_queue;
+  (* Hit again *)
   assert_equal true @@ Cpu.cpu_attack ship_full_array empty_array (ref 0);
+  (* On second hit, a direction will be set *)
   assert_equal true
   @@ (String.( = ) !Cpu.attack_direction "horizontal"
      || String.( = ) !Cpu.attack_direction "vertical");
@@ -468,63 +469,76 @@ let test_cpu_attack _ =
   Queue.clear Cpu.vert_attack_queue;
 
   (* Will use bombs here *)
-
+  (* Mark the edges as invalid attack squares, so a bomb is guaranteed to be fired *)
   Array.fill empty_array.(0) ~pos:0 ~len:10 Miss;
   Array.fill empty_array.(9) ~pos:0 ~len:10 Miss;
-  Array.iter empty_array ~f: (fun row -> row.(0) <- Miss;row.(9) <- Miss; );
+  Array.iter empty_array ~f:(fun row ->
+      row.(0) <- Miss;
+      row.(9) <- Miss);
 
+  (* Bomb miss*)
   assert_equal false @@ Cpu.cpu_attack empty_array empty_array (ref 1);
 
-
+  (* Mark the edges as invalid attack squares, so a bomb is guaranteed to be fired *)
   Array.fill ship_full_array.(0) ~pos:0 ~len:10 Miss;
   Array.fill ship_full_array.(9) ~pos:0 ~len:10 Miss;
-  Array.iter ship_full_array ~f: (fun row -> row.(0) <- Miss;row.(9) <- Miss; );
+  Array.iter ship_full_array ~f:(fun row ->
+      row.(0) <- Miss;
+      row.(9) <- Miss);
+
+  (* Bomb hit *)
   assert_equal true @@ Cpu.cpu_attack ship_full_array empty_array (ref 1);
 
   Queue.clear Cpu.horz_attack_queue;
   Queue.clear Cpu.vert_attack_queue;
 
-  let hit_full_array =  Array.make_matrix ~dimx:10 ~dimy:10 ShipHit in 
-  hit_full_array.(5).(5) <- Empty; 
+  let hit_full_array = Array.make_matrix ~dimx:10 ~dimy:10 ShipHit in
+  hit_full_array.(5).(5) <- Empty;
 
   assert_equal false @@ Cpu.cpu_attack hit_full_array empty_array (ref 0);
   assert_equal Miss @@ hit_full_array.(5).(5);
 
-  Queue.enqueue Cpu.horz_attack_queue (6,6); 
+  Queue.enqueue Cpu.horz_attack_queue (6, 6);
 
-  let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in 
+  let arr = Array.make_matrix ~dimx:10 ~dimy:10 Empty in
 
-  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0 ); 
+  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0);
   assert_equal Miss @@ arr.(6).(6);
 
-
   Queue.clear Cpu.horz_attack_queue;
-  Queue.enqueue Cpu.vert_attack_queue (7,7); 
-  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0 ); 
+
+  Queue.enqueue Cpu.vert_attack_queue (7, 7);
+  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0);
   assert_equal Miss @@ arr.(7).(7);
 
-  Queue.clear Cpu.vert_attack_queue; 
+  Queue.clear Cpu.vert_attack_queue;
 
-  Queue.enqueue Cpu.horz_attack_queue (8,8); 
-  Queue.enqueue Cpu.vert_attack_queue (9,9);
-  Cpu.attack_direction := "vertical";  
-  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0 ); 
+  (* Both queues have elements *)
+  Queue.enqueue Cpu.horz_attack_queue (8, 8);
+  Queue.enqueue Cpu.vert_attack_queue (9, 9);
+  Cpu.attack_direction := "vertical";
+  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0);
   assert_equal Miss @@ arr.(9).(9);
+  (* Should be empty since vertical attack was completed *)
   assert_equal true @@ Queue.is_empty Cpu.vert_attack_queue;
 
-  Queue.enqueue Cpu.vert_attack_queue (3,9);
-  Cpu.attack_direction := "horizontal";  
-  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0 ); 
+  (* Both queues have elements *)
+  Queue.enqueue Cpu.vert_attack_queue (3, 9);
+  Cpu.attack_direction := "horizontal";
+  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0);
   assert_equal Miss @@ arr.(8).(8);
+  (* Should be empty since horizontal attack was completed *)
   assert_equal true @@ Queue.is_empty Cpu.horz_attack_queue;
 
-  Queue.enqueue Cpu.horz_attack_queue (4,9);
+  Queue.enqueue Cpu.horz_attack_queue (4, 9);
   Cpu.attack_direction := "";
 
-  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0 ); 
-  assert_equal true @@ (equal_status arr.(4).(9) Miss ||equal_status arr.(3).(9) Miss ) ;
-  assert_equal true @@ (Queue.is_empty Cpu.horz_attack_queue || Queue.is_empty Cpu.vert_attack_queue)
-
+  assert_equal false @@ Cpu.cpu_attack arr empty_array (ref 0);
+  assert_equal true
+  @@ (equal_status arr.(4).(9) Miss || equal_status arr.(3).(9) Miss);
+  assert_equal true
+  @@ (Queue.is_empty Cpu.horz_attack_queue
+     || Queue.is_empty Cpu.vert_attack_queue)
 
 let test_attack_given_coords _ =
   Queue.clear Cpu.horz_attack_queue;

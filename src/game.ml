@@ -100,7 +100,7 @@ let place_ship (board : Board.t) (placed_ships : string) (row1 : int) (col1 : in
       Ok ship_size)
 
 let cleanse_board (board : Board.t) : unit =
-  (* Only keep ships on the board, everything else Empty *)
+  (* Only keep ships and mines on the board, everything else Empty *)
   for r = 0 to Array.length board - 1 do
     for c = 0 to Array.length board.(r) - 1 do
       if
@@ -209,12 +209,13 @@ let rec find_ship (board : Board.t) : int * int =
   let potential_row = Random.int board_length in
   let potential_col = Random.int board_length in
 
+  (* Keep recursing until a ship is found on the board *)
+
   if Board.equal_status Board.Ship board.(potential_row).(potential_col) then
     (potential_row, potential_col)
   else find_ship board
 
-(* Player attack *)
-
+(* Two player game's JSON representation *)
 type two_player_save = {
   player1 : string;
   player2 : string;
@@ -224,6 +225,7 @@ type two_player_save = {
 }
 [@@deriving yojson { exn = true }]
 
+(* Single player game's JSON representation *)
 type single_player_save = {
   user : string;
   cpu : string;
@@ -241,6 +243,8 @@ let save_single_player_game (user_board : Board.t) (cpu_board : Board.t)
     (cpu_horz_queue : (int * int) Core.Queue.t)
     (cpu_vert_queue : (int * int) Core.Queue.t) (cpu_attack_direction : string)
     =
+
+  (* Store tuples as a string representation *)
   let tuple_to_string (tup : int * int) =
     Int.to_string (fst tup) ^ "," ^ Int.to_string (snd tup)
   in

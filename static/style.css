@@ -10,8 +10,3 @@
     float: left;
     padding: 25px;
   }
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
-}

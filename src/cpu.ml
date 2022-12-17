@@ -11,7 +11,7 @@ let vert_attack_queue = Queue.create ()
 let attack_direction = ref ""
 
 let rec place_cpu_ships (board : Board.t) (ship_size : int) : unit =
-  (* Smallest ship size will be 2*)
+  (* Smallest ship size will be 1, which is the mine *)
   if ship_size >= 1 then
     let board_length = Array.length board in
 
@@ -64,12 +64,14 @@ let rec find_valid_attack (board : Board.t) =
   let potential_row = Random.int board_length in
   let potential_col = Random.int board_length in
 
+  (* Keep searching for a valid attack square *)
   if Game.is_valid_attack board potential_row potential_col then
     (potential_row, potential_col)
   else find_valid_attack board
 
 let attack_given_coords (user_board : Board.t) (cpu_board : Board.t)
     (attack_row : int) (attack_col : int) : bool =
+  (* Hit *)
   if Board.equal_status Board.Ship user_board.(attack_row).(attack_col) then (
     user_board.(attack_row).(attack_col) <- Board.ShipHit;
     (* Clear queues and attack direction after a sink - go back to random search *)
@@ -108,6 +110,7 @@ let attack_given_coords (user_board : Board.t) (cpu_board : Board.t)
     let penalty_row = fst penalty_tuple in
     let penalty_col = snd penalty_tuple in
     cpu_board.(penalty_row).(penalty_col) <- Board.ShipHit;
+    (* Hit CPU board if CPU hits mine *)
     let _ = Game.has_sunk cpu_board penalty_row penalty_col in
 
     false)
@@ -157,6 +160,8 @@ let cpu_use_bomb (user_board : Board.t) (cpu_board : Board.t) (row : int)
       Game.is_valid_attack user_board (fst tup) (snd tup));
   Queue.filter_inplace vert_attack_queue ~f:(fun tup ->
       Game.is_valid_attack user_board (fst tup) (snd tup));
+
+  (* Check if any of the attacks hit *)
   Queue.fold hit_queue ~init:false ~f:(fun accum b -> accum || b)
 
 let cpu_attack (user_board : Board.t) (cpu_board : Board.t)
@@ -167,17 +172,18 @@ let cpu_attack (user_board : Board.t) (cpu_board : Board.t)
     let attack_row = fst attack_target in
     let attack_col = snd attack_target in
 
+    (* Always bomb if bombs are available *)
+    (* However, for an edge, don't bomb because it reduces the number of squares attacked *)
     if
       !bombs_remaining > 0
-      && (not
-            (attack_row = 0 || attack_row = 9 || attack_col = 0
-           || attack_col = 9))
-      
+      && not
+           (attack_row = 0 || attack_row = (Array.length user_board - 1) || attack_col = 0 || attack_col = (Array.length user_board -1))
     then (
       bombs_remaining := !bombs_remaining - 1;
-
       cpu_use_bomb user_board cpu_board attack_row attack_col)
-    else attack_given_coords user_board cpu_board attack_row attack_col
+    else
+      attack_given_coords user_board cpu_board attack_row
+        attack_col (* Regular attack *)
   else if Queue.is_empty vert_attack_queue then (
     (* CPU has no vertical moves to make, but does have smart horizontal moves available *)
 
@@ -209,11 +215,10 @@ let cpu_attack (user_board : Board.t) (cpu_board : Board.t)
     (* Only make vertical moves from now on *)
     attack_direction := "vertical";
 
-    attack_given_coords user_board cpu_board attack_row attack_col)
-
-
-    (* Both horizontal and vertical queues are not empty, so we have possible squares to attack in both ways. Determine the attack direction by using the current direction.*)
+    attack_given_coords user_board cpu_board attack_row attack_col
+    )
   else if String.( = ) !attack_direction "vertical" then (
+    (* Both horizontal and vertical queues are not empty, so we have possible squares to attack in both directions. Determine the attack direction by using the current set direction. *)
     (* Attack direction is vertical, so make vertical moves *)
     let attack_target =
       Queue.get vert_attack_queue (Random.int (Queue.length vert_attack_queue))
@@ -224,7 +229,7 @@ let cpu_attack (user_board : Board.t) (cpu_board : Board.t)
     let attack_col = snd attack_target in
 
     attack_given_coords user_board cpu_board attack_row
-      attack_col (*horizaontal*))
+      attack_col )
   else if String.( = ) !attack_direction "horizontal" then (
     (* Attack direction is horizontal, so make horizontal moves *)
     let attack_target =
@@ -237,7 +242,7 @@ let cpu_attack (user_board : Board.t) (cpu_board : Board.t)
 
     attack_given_coords user_board cpu_board attack_row attack_col)
   else if Random.int 2 = 1 then (
-    
+    (* No set direction, but available moves in both queues. *)
     (* Randomly pick horizontal attack direction *)
     attack_direction := "horizontal";
     let attack_target =

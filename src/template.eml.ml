@@ -3,14 +3,11 @@ let start_screen =
       <head>
       <link rel="stylesheet" href="static/style.css">
       </head>
-
       <body>
-
       <form action="/placement" method="get">
       <input type="submit" 
             value="New user vs. CPU game"  />
       </form>
-
       <form action="/player1_placement" method="get">
       <input type="submit" 
             value="New user vs. user game"  />
@@ -19,13 +16,10 @@ let start_screen =
       <input type="submit" 
             value="Load existing game from file"  />
       </form>
-
-
-
       </body>
       </html>
 
-let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~ready ~error request= 
+let ship_placement ~turn ~user_board_status ~ship_status ~ready ~error request= 
   <html>
   <head>
   <link rel="stylesheet" href="static/style.css">
@@ -53,8 +47,7 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
 %       display_user_row row (col+1)
 %   in 
 
-
-  <body onload="loadColors()">
+  <body onload=<%s "loadColors('" ^ user_board_status ^ "','" ^ ship_status ^ "')" %>>
 
 %     let display_turn = 
 %           if turn = "player1" then "Player 1"
@@ -63,7 +56,6 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
   <h1>Place ships - <%s display_turn %></h1>
 
   <div id="user-board-status" style="display: none;"><%s user_board_status %></div>
-  <div id="placed-ship-size" style="display: none;"><%s placed_ship_size %></div>
   <div id="ship-status" style="display: none;"><%s ship_status %></div>
 
   <h2 id="length5">Carrier (length of 5)</h2>
@@ -72,9 +64,6 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
   <h2 id="length2">Destroyer (length of 2)</h2>
   <h2 id="length1">Mine (length of 1) </h2>
 
-
-
-  
   <div class="column">
   <table class="board">
       <tbody>
@@ -154,7 +143,6 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
       
     <button type="submit"> Reset board </button>
 
-         
   </form>
 
   </div>
@@ -185,12 +173,7 @@ let ship_placement ~turn ~user_board_status ~ship_status ~placed_ship_size ~read
   </p>
   </div>
 
-
-
-
-
   <script src= "static/placement.js">
-  
   </script>
   </body>
   </html>
@@ -237,7 +220,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
         </td>
 %       display_player2_row row (col+1)
 %   in  
-  <body onload=<%s "loadColors(" ^game_over ^")"%> >
+  <body onload=<%s "loadTwoPlayer('" ^ player1_board_status ^ "','" ^ player2_board_status ^ "'," ^game_over ^")"%> >
 
 %     let turn_display = 
 %       if (game_over = "true" && turn = "player1") then "Player 1 wins!"
@@ -249,7 +232,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
   <div class="column">
   <h2>Player 1's board</h2>
   <p>Player 1's remaining bombs: <%s player1_bombs %></p>
-  <div id="player1-board-status" style="display: none;"><%s player1_board_status %></div>
+  
   <table class="board">
       <tbody>
       <tr>
@@ -298,7 +281,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
   <div class="column">
   <h2>Player 2's board</h2>
   <p>Player 2's remaining bombs: <%s player2_bombs %></p>
-  <div id="player2-board-status" style="display: none;"><%s player2_board_status %></div>
+  
   <table class="board">
   <tbody>
   <tr>
@@ -355,8 +338,6 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
             <button type="submit" onclick="alert('Game saved to saved.txt! (Note that saving again will overwrite this file)')"> Save game </button>
 %     end;
 
-
-         
   </form>
 % if ((turn = "player1" && player1_bombs = "0") ||(turn = "player2" && player2_bombs = "0") || (game_over = "true")) then begin 
 
@@ -365,10 +346,6 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
 % else begin
       <button onclick="bombSet=true; this.disabled=true; this.innerHTML = 'Click to fire bomb!';">Bomb</button>
 % end;
-
-
-
-
 
       <div style="padding-left:50px;padding-top:50px;width:1500px;">
       <p> 
@@ -437,7 +414,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
       </td>
 %       display_cpu_row row (col+1)
 %   in  
-<body onload=<%s "loadColors(" ^game_over ^")"%> >
+<body onload=<%s "loadSinglePlayer('" ^ user_board_status ^ "','" ^ cpu_board_status ^ "'," ^ game_over ^")"%> >
 
 % if turn = "user" && game_over = "true" then begin
 <h1> User wins! </h1>
@@ -458,7 +435,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 <div class="column">
 <h2>User's board</h2>
 <p>User's remaining bombs: <%s user_bombs %></p>
-<div id="user-board-status" style="display: none;"><%s user_board_status %></div>
+
 
 <table class="board">
       <tbody>
@@ -508,7 +485,6 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 <div class="column">
 <h2>CPU's board</h2>
 <p>CPU's remaining bombs: <%s cpu_bombs %></p>
-<div id="cpu-board-status" style="display: none;"><%s cpu_board_status %></div>
 <table class="board">
 <tbody>
 <tr>
@@ -564,8 +540,6 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
             <button type="submit" onclick="alert('Game saved to saved.txt! (Note that saving again will overwrite this file)')"> Save game </button>
 %     end;
 
-
-         
   </form>
 % if ((turn = "user" && user_bombs = "0") ||(turn = "cpu"  )  || (game_over = "true")) then begin 
 
@@ -574,13 +548,6 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 % else begin
       <button onclick="bombSet=true; this.disabled=true; this.innerHTML = 'Click to fire bomb!';">Bomb</button>
 % end;
-
-
-
-
-
-
-
 
 <div style="padding-left:50px;padding-top:50px;width:1500px;">
 <p> 
@@ -599,7 +566,6 @@ Game rules:
 
 <li>  The game can be saved by clicking "Save game". Only one game can be saved at a time. 
 </li>
-
 
 </ol>
 

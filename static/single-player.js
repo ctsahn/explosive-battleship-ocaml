@@ -1,31 +1,26 @@
 let disable = false; //disable multiple clicks
-let bombSet = false;
-async function handleClick(cellid,formid,gameOver){
+let bombSet = false; // whether the user clicked the "Bomb" button or not
+function handleClick(cellid,formid,gameOver){
     // only allow clicks when it is your turn, and make sure a form exists in order for click to occur
     if(!disable && document.getElementById(formid) && !document.getElementById("cpu-turn") && !gameOver){
       document.getElementById(cellid).style.backgroundColor = "red";
       if (bombSet){
-      
         document.getElementById(formid.replace("form","input")).value = "bomb" + document.getElementById(formid.replace("form","input")).value;
-      
-      
       }
       document.getElementById(formid).submit();
       disable=true;
     }
-
-
 }
 
-// when CPU turn, automatically send a request to the /cpu_turn endpoint
 
-function loadColors(gameOver){
-  if(document.getElementById("cpu-turn") &&!gameOver){
-    document.getElementById("cpu-turn").submit();
-  }
+
+function loadSinglePlayer(userBoardStatus, cpuBoardStatus, gameOver){
+
+  // when CPU turn, automatically send a request to the /cpu_turn endpoint
+    if(document.getElementById("cpu-turn") &&!gameOver){
+      document.getElementById("cpu-turn").submit();
+    }
     
-    let userBoardStatus = document.getElementById("user-board-status").innerHTML;
-    let cpuBoardStatus = document.getElementById("cpu-board-status").innerHTML;
     for(let i=0;i<100;i++){
         
         // miss
@@ -41,7 +36,6 @@ function loadColors(gameOver){
           document.getElementById("usercell" + i).innerHTML = "X";
           document.getElementById("usercell" + i).style.color = "red";
           document.getElementById("usercell" + i).style.borderColor = "red";
-          
         }
         // sunk
         else if(userBoardStatus[i]==4){
@@ -49,10 +43,11 @@ function loadColors(gameOver){
           document.getElementById("usercell" + i).style.color = "red";
           document.getElementById("usercell" + i).style.borderColor = "red";
         } 
-
+        // mine
         else if(userBoardStatus[i]==5){
           document.getElementById("usercell" + i).style.backgroundColor = "gray";
         } 
+        // mine hit
         else if(userBoardStatus[i]==6){
           document.getElementById("usercell" + i).style.backgroundColor = "black";
           document.getElementById("usercell" + i).innerHTML = "";
@@ -61,7 +56,7 @@ function loadColors(gameOver){
         if(cpuBoardStatus[i] == 1){
           document.getElementById("cpucell" + i).innerHTML= "•";
         }
-
+        // only reveal CPU ships after game is over
         else if(cpuBoardStatus[i] == 2 && gameOver ){
           document.getElementById("cpucell" + i).style.backgroundColor = "blue";
         }
@@ -78,11 +73,11 @@ function loadColors(gameOver){
           document.getElementById("cpucell" + i).style.color = "red";
           document.getElementById("cpucell" + i).style.borderColor = "red";
         } 
-        
-        
+        // only reveal CPU mine after game is over
         else if(cpuBoardStatus[i]==5 && gameOver ){
           document.getElementById("cpucell" + i).style.backgroundColor = "gray";
         } 
+        // mine hit
         else if(cpuBoardStatus[i]==6){
           document.getElementById("cpucell" + i).style.backgroundColor = "black";
           document.getElementById("cpucell" + i).innerHTML = "";

@@ -3,7 +3,6 @@ open Board
 
 let player_attack (board : Board.t) (mine_penalty_board : Board.t) (row : int)
     (col : int) (is_single_player : bool) : bool =
-  (* hit *)
   if Board.equal_status Board.Ship board.(row).(col) then (
     board.(row).(col) <- Board.ShipHit;
     let _ = Game.has_sunk board row col in
@@ -18,8 +17,8 @@ let player_attack (board : Board.t) (mine_penalty_board : Board.t) (row : int)
     if is_single_player then
       let _ =
         Cpu.attack_given_coords mine_penalty_board board penalty_row penalty_col
+        (* Count is as a CPU attack, so the CPU knows about this hit square *)
       in
-
       false
     else (
       mine_penalty_board.(penalty_row).(penalty_col) <- ShipHit;
@@ -31,6 +30,7 @@ let player_attack (board : Board.t) (mine_penalty_board : Board.t) (row : int)
 
 let player_bomb (board : Board.t) (mine_penalty_board : Board.t) (row : int)
     (col : int) (is_single_player : bool) : bool =
+  (* Attack the bombed square and the 8 squares around it *)
   let hit_queue = Queue.create () in
 
   Queue.enqueue hit_queue
@@ -46,14 +46,12 @@ let player_bomb (board : Board.t) (mine_penalty_board : Board.t) (row : int)
     Queue.enqueue hit_queue
       (player_attack board mine_penalty_board (row + 1) (col - 1)
          is_single_player);
-
   if Game.is_valid_attack board (row + 1) col then
     Queue.enqueue hit_queue
       (player_attack board mine_penalty_board (row + 1) col is_single_player);
   if Game.is_valid_attack board (row - 1) col then
     Queue.enqueue hit_queue
       (player_attack board mine_penalty_board (row - 1) col is_single_player);
-
   if Game.is_valid_attack board (row + 1) (col + 1) then
     Queue.enqueue hit_queue
       (player_attack board mine_penalty_board (row + 1) (col + 1)
@@ -66,4 +64,5 @@ let player_bomb (board : Board.t) (mine_penalty_board : Board.t) (row : int)
       (player_attack board mine_penalty_board (row - 1) (col + 1)
          is_single_player);
 
+  (* Check if any of the attacks hit *)
   Queue.fold hit_queue ~init:false ~f:(fun accum b -> accum || b)
