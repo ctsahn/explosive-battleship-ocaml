@@ -14,7 +14,15 @@ function handleClick(cellid, formid, currentTurn,gameOver) {
 }
 
 
-function loadTwoPlayer(player1BoardStatus, player2BoardStatus, gameOver) {
+function loadTwoPlayer(player1BoardStatus, player2BoardStatus, turn, gameOver) {
+
+
+  if(turn === "player1"){
+    document.getElementById("player2-board").style.color = "darkgreen"; 
+  }
+  else{
+    document.getElementById("player1-board").style.color = "darkgreen"; 
+  }
 
   for (let i = 0; i < 100; i++) {
 

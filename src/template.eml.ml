@@ -220,7 +220,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
         </td>
 %       display_player2_row row (col+1)
 %   in  
-  <body onload=<%s "loadTwoPlayer('" ^ player1_board_status ^ "','" ^ player2_board_status ^ "'," ^game_over ^")"%> >
+  <body onload=<%s "loadTwoPlayer('" ^ player1_board_status ^ "','" ^ player2_board_status ^ "','" ^ turn ^ "'," ^game_over ^")"%> >
 
 %     let turn_display = 
 %       if (game_over = "true" && turn = "player1") then "Player 1 wins!"
@@ -233,7 +233,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
   <h2>Player 1's board</h2>
   <p>Player 1's remaining bombs: <%s player1_bombs %></p>
   
-  <table class="board">
+  <table id="player1-board" class="board">
       <tbody>
       <tr>
 %   begin display_player1_row 0 0 end;
@@ -282,7 +282,7 @@ let two_player_game_board ~player1_board_status ~player2_board_status ~player1_b
   <h2>Player 2's board</h2>
   <p>Player 2's remaining bombs: <%s player2_bombs %></p>
   
-  <table class="board">
+  <table id="player2-board" class="board">
   <tbody>
   <tr>
 %   begin display_player2_row 0 0 end;
@@ -414,7 +414,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
       </td>
 %       display_cpu_row row (col+1)
 %   in  
-<body onload=<%s "loadSinglePlayer('" ^ user_board_status ^ "','" ^ cpu_board_status ^ "'," ^ game_over ^")"%> >
+<body onload=<%s "loadSinglePlayer('" ^ user_board_status ^ "','" ^ cpu_board_status ^ "','" ^ turn ^ "'," ^ game_over ^")"%> >
 
 % if turn = "user" && game_over = "true" then begin
 <h1> User wins! </h1>
@@ -437,7 +437,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 <p>User's remaining bombs: <%s user_bombs %></p>
 
 
-<table class="board">
+<table id="user-board" class="board">
       <tbody>
       <tr>
 %   begin display_user_row 0 0 end;
@@ -485,7 +485,7 @@ let single_player_game_board ~user_board_status ~cpu_board_status ~user_bombs ~c
 <div class="column">
 <h2>CPU's board</h2>
 <p>CPU's remaining bombs: <%s cpu_bombs %></p>
-<table class="board">
+<table id="cpu-board" class="board">
 <tbody>
 <tr>
 %   begin display_cpu_row 0 0 end;

@@ -14,12 +14,21 @@ function handleClick(cellid,formid,gameOver){
 
 
 
-function loadSinglePlayer(userBoardStatus, cpuBoardStatus, gameOver){
+function loadSinglePlayer(userBoardStatus, cpuBoardStatus, turn, gameOver){
 
-  // when CPU turn, automatically send a request to the /cpu_turn endpoint
-    if(document.getElementById("cpu-turn") &&!gameOver){
-      document.getElementById("cpu-turn").submit();
+    if(turn === "cpu"){
+      document.getElementById("user-board").style.color = "darkgreen"; 
+       // when CPU turn, automatically send a request to the /cpu_turn endpoint
+      if(!gameOver){
+        document.getElementById("cpu-turn").submit();
+      }
     }
+    else{
+      document.getElementById("cpu-board").style.color = "darkgreen"; 
+    }
+
+
+
     
     for(let i=0;i<100;i++){
         
