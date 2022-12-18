@@ -17,6 +17,5 @@
   (lwt (>= 5.6.1))
   (lwt_ppx (>= 2.1.0))
   (yojson (>= 2.0.2))
-  (ppx_deriving_yojson (>= 3.7.0))
   )
 )
