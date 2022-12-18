@@ -26,3 +26,5 @@ To run:
 3. When a ship is sunk, all squares around it will be revealed (as ships cannot touch each other).
 4. A hit Mine is represented by a black square. When the Mine is hit by your opponent, it automatically hits one of their ships' squares. The turn also becomes yours! 
 5. The game can be saved by clicking "Save game". Only one game can be saved at a time. 
+
+### Presentation slides: https://docs.google.com/presentation/d/1PQkCP9QiDEDx8Atvp3nCCStck-1bo1hXNrRsrbXvL8U/edit?usp=sharing 
